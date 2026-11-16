@@ -61,6 +61,7 @@ func (g *gateFlags) evaluate(ctx context.Context, pg, sp *pgxpool.Pool) (gate.De
 	} else {
 		sig.Lag, sig.HeartbeatAge = &lag, &hb
 	}
+	gate.MeasureBacklog(lctx, &sig, strings.Split(pgutil.Env("KAFKA_BROKERS", "localhost:19094"), ","), sp)
 	return gate.Evaluate(p, sig, time.Now()), nil
 }
 

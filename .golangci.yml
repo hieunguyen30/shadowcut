@@ -1,0 +1,11 @@
+version: "2"
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - ineffassign
+    - unused
+    - misspell
+  # errcheck is disabled on purpose: best-effort cleanup paths (DROP TABLE in test
+  # cleanup, journal pruning, metrics writes) intentionally ignore errors.

@@ -14,6 +14,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"gopkg.in/yaml.v3"
 
+	"github.com/shadowcut/shadowcut/internal/cdc"
 	"github.com/shadowcut/shadowcut/internal/classify"
 	"github.com/shadowcut/shadowcut/internal/hazard"
 	"github.com/shadowcut/shadowcut/internal/shadow"
@@ -99,7 +100,12 @@ type Signals struct {
 	Scan         *hazard.Report
 	Lag          *time.Duration // replication lag measured from heartbeats
 	HeartbeatAge *time.Duration // age of the source heartbeat (CDC liveness)
-	LagErr       string
+	// Backlog: unapplied CDC records and the age of the oldest one (per-partition
+	// measurement; the heartbeat alone can run ahead of a data backlog, BUG-005).
+	BacklogRecords *int64
+	BacklogAge     *time.Duration
+	BacklogErr     string
+	LagErr         string
 }
 
 // Check is one evaluated condition.
@@ -181,7 +187,22 @@ func Evaluate(p Policy, s Signals, now time.Time) Decision {
 	case s.Lag == nil:
 		add("replication.lag", false, "lag not measured")
 	default:
-		add("replication.lag", *s.Lag <= p.MaxLag.Duration, fmt.Sprintf("lag %s (max %s)", s.Lag.Round(time.Millisecond), p.MaxLag))
+		lag := *s.Lag
+		src := "heartbeat"
+		if s.BacklogAge != nil && *s.BacklogAge > lag {
+			lag, src = *s.BacklogAge, "oldest unapplied CDC record"
+		}
+		add("replication.lag", lag <= p.MaxLag.Duration, fmt.Sprintf("lag %s from %s (max %s)", lag.Round(time.Millisecond), src, p.MaxLag))
+	}
+	switch {
+	case s.BacklogErr != "":
+		add("replication.backlog", false, "could not measure the CDC backlog: "+s.BacklogErr)
+	case s.BacklogRecords != nil:
+		detail := fmt.Sprintf("%d unapplied CDC records", *s.BacklogRecords)
+		if s.BacklogAge != nil && *s.BacklogAge > 0 {
+			detail += fmt.Sprintf(", oldest %s old", s.BacklogAge.Round(time.Millisecond))
+		}
+		add("replication.backlog", s.BacklogAge == nil || *s.BacklogAge <= p.MaxLag.Duration, detail)
 	}
 	if s.HeartbeatAge != nil {
 		add("replication.heartbeat", *s.HeartbeatAge <= p.MaxHeartbeatAge.Duration, fmt.Sprintf("source heartbeat age %s (max %s): CDC connector %s", s.HeartbeatAge.Round(time.Millisecond), p.MaxHeartbeatAge, alive(*s.HeartbeatAge <= p.MaxHeartbeatAge.Duration)))
@@ -291,4 +312,19 @@ func MeasureLag(ctx context.Context, pg, sp *pgxpool.Pool) (lag, hbAge time.Dura
 		lag = 0
 	}
 	return lag, now.Sub(pts), nil
+}
+
+// MeasureBacklog fills the backlog signals (Kafka end offsets vs applied offsets).
+func MeasureBacklog(ctx context.Context, s *Signals, brokers []string, sp *pgxpool.Pool) {
+	b, err := cdc.MeasureBacklog(ctx, brokers, "sc.public.", sp)
+	if err != nil {
+		s.BacklogErr = err.Error()
+		return
+	}
+	s.BacklogRecords = &b.Records
+	var age time.Duration
+	if !b.OldestPending.IsZero() {
+		age = time.Since(b.OldestPending)
+	}
+	s.BacklogAge = &age
 }

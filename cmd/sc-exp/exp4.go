@@ -149,7 +149,6 @@ func exp4Cmd() *cobra.Command {
 			for _, o := range only {
 				want[o] = true
 			}
-			var results []exp4Result
 			for _, sc := range scenarios {
 				if len(want) > 0 && !want[sc.Name] {
 					continue
@@ -158,7 +157,6 @@ func exp4Cmd() *cobra.Command {
 				if err != nil {
 					return fmt.Errorf("%s: %w", sc.Name, err)
 				}
-				results = append(results, r)
 				_ = state.WriteJSON(filepath.Join(out, sc.Name+".json"), r)
 				slog.Info("scenario done", "scenario", sc.Name, "acked", r.Acked, "lost", r.Lost, "dup_effects", r.DupEffects, "dup_deliveries", r.DupDeliveries, "recovery_s", r.RecoverySeconds, "gate_correct", r.GateCorrect)
 			}
@@ -190,7 +188,7 @@ func replicationDecision(ctx context.Context, pg, sp *pgxpool.Pool) (gate.Decisi
 		Verify: &verify.Summary{UpdatedAt: now, Rounds: 1},
 		Scan:   &hazard.Report{},
 	}
-	lctx, cancel := context.WithTimeout(ctx, 3*time.Second)
+	lctx, cancel := context.WithTimeout(ctx, 6*time.Second)
 	defer cancel()
 	lag, hb, err := gate.MeasureLag(lctx, pg, sp)
 	var errS string
@@ -199,6 +197,13 @@ func replicationDecision(ctx context.Context, pg, sp *pgxpool.Pool) (gate.Decisi
 		errS = err.Error()
 	} else {
 		sig.Lag, sig.HeartbeatAge = &lag, &hb
+	}
+	gate.MeasureBacklog(lctx, &sig, strings.Split(pgutil.Env("KAFKA_BROKERS", "localhost:19094"), ","), sp)
+	if sig.BacklogAge != nil && *sig.BacklogAge > lag {
+		lag = *sig.BacklogAge // effective lag: the gate uses the larger of the two
+	}
+	if sig.BacklogErr != "" {
+		errS += " backlog: " + sig.BacklogErr
 	}
 	d := gate.Evaluate(gate.DefaultPolicy(), sig, now)
 	return d, float64(lag.Milliseconds()), float64(hb.Milliseconds()), errS
@@ -445,13 +450,13 @@ func writeExp4Summary(dir string) error {
 	files, _ := filepath.Glob(filepath.Join(dir, "*.json"))
 	sort.Strings(files)
 	var b strings.Builder
-	b.WriteString("| scenario | fault | acked writes | lost | extra | value mismatch | dup deliveries (Kafka) | dup effects | recovery (s) | max lag (s) | gate NO-GO during fault | gate correct |\n|---|---|---|---|---|---|---|---|---|---|---|---|\n")
+	b.WriteString("| scenario | fault | acked writes | lost | extra | value mismatch | dup deliveries (Kafka) | dup effects | recovery (s) | max lag (s) | NO-GO during fault | false GO samples | false NO-GO samples | gate safe |\n|---|---|---|---|---|---|---|---|---|---|---|---|---|---|\n")
 	for _, f := range files {
 		var r exp4Result
-		if state.ReadJSON(f, &r) != nil || r.Scenario == "" {
+		if state.ReadJSON(f, &r) != nil || r.Desc == "" {
 			continue
 		}
-		fmt.Fprintf(&b, "| %s | %s | %d | %d | %d | %d | %d | %d | %.1f | %.1f | %v | %v |\n", r.Scenario, r.Desc, r.Acked, r.Lost, r.Extra, r.ValueMismatch, r.DupDeliveries, r.DupEffects, r.RecoverySeconds, r.MaxLagMs/1000, r.NoGoDuringFault, r.GateCorrect)
+		fmt.Fprintf(&b, "| %s | %s | %d | %d | %d | %d | %d | %d | %.1f | %.1f | %v | %d | %d | %v |\n", r.Scenario, r.Desc, r.Acked, r.Lost, r.Extra, r.ValueMismatch, r.DupDeliveries, r.DupEffects, r.RecoverySeconds, r.MaxLagMs/1000, r.NoGoDuringFault, r.FalseGo, r.FalseNoGo, r.GateCorrect)
 	}
 	for _, f := range summaryExtras {
 		f(dir, &b)

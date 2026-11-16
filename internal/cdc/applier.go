@@ -214,6 +214,7 @@ func (a *Applier) ApplyBatch(ctx context.Context, recs []*kgo.Record) error {
 		}
 		// 2. mutations
 		var muts []*spanner.Mutation
+		srcTS := map[tp]time.Time{} // newest source commit time per partition
 		var auditKeys []spanner.Key
 		for _, r := range recs {
 			k := tp{r.Topic, r.Partition}
@@ -244,6 +245,9 @@ func (a *Applier) ApplyBatch(ctx context.Context, recs []*kgo.Record) error {
 			if st := env.SourceTime(); st.After(newest) {
 				newest = st
 			}
+			if st := env.SourceTime(); st.After(srcTS[k]) {
+				srcTS[k] = st
+			}
 			if a.cfg.Audit {
 				auditKeys = append(auditKeys, spanner.Key{r.Topic, int64(r.Partition), r.Offset})
 			}
@@ -251,8 +255,8 @@ func (a *Applier) ApplyBatch(ctx context.Context, recs []*kgo.Record) error {
 		now := time.Now().UTC()
 		for k, off := range maxOff {
 			var src spanner.NullTime
-			if !newest.IsZero() {
-				src = spanner.NullTime{Time: newest, Valid: true}
+			if ts, ok := srcTS[k]; ok {
+				src = spanner.NullTime{Time: ts, Valid: true}
 			}
 			muts = append(muts, spanner.InsertOrUpdate("sc_offsets",
 				[]string{"topic", "kpartition", "koffset", "source_ts", "applied_at"},

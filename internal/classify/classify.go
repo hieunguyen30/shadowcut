@@ -132,7 +132,6 @@ type key struct {
 	idx  int
 	desc bool
 	nf   *bool
-	text bool // the ORDER BY expression is textual
 }
 
 func orderKeys(info sqlscan.Info, cols []rowset.Column) []key {

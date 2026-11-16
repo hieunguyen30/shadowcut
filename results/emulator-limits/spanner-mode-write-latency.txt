@@ -1,0 +1,12 @@
+## with applier running (live CDC apply, ~17 edits/s)
+0 12.266s retries 1 <nil>
+1 1m0.001s retries 4 upsert_page: timeout: context deadline exceeded
+2 1m0s retries 9 upsert_page: timeout: context deadline exceeded
+3 20.458s retries 11 <nil>
+4 1.751s retries 11 <nil>
+## applier paused
+0 2.007s retries 0 <nil>
+1 1.802s retries 0 <nil>
+2 1.725s retries 0 <nil>
+3 1.77s retries 0 <nil>
+4 1.774s retries 0 <nil>

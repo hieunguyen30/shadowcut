@@ -125,7 +125,7 @@ func runCrashMidCutover(ctx context.Context, pg, sp *pgxpool.Pool) (cutoverCrash
 	r.FreezeSeconds["cutover"] = time.Since(t0).Seconds()
 	st, _ = ctl.GetStatus(ctx)
 	step("cutover complete; state = " + st.Mode + "/" + st.Step)
-	time.Sleep(5 * time.Second) // writes on Spanner
+	time.Sleep(spannerWindow) // writes on Spanner (slow on the emulator: one RW transaction at a time)
 
 	// 3. rollback crashes after freezing
 	step("rollback (crash injected after freeze)")
@@ -209,3 +209,8 @@ func eventIDs(ctx context.Context, q *pgxpool.Pool, wiki string) (map[string]boo
 	}
 	return out, dupes, rows.Err()
 }
+
+// spannerWindow is how long the crash scenario writes in Spanner mode. On the
+// emulator each app write takes ~2 s and contends with the applier's heartbeat
+// transactions (results/emulator-limits), so the window is generous.
+var spannerWindow = 30 * time.Second
