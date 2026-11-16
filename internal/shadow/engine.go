@@ -226,12 +226,17 @@ func (e *Engine) Process(ctx context.Context, j Job) Outcome {
 	o.Equal = d.Equal()
 	if !o.Equal {
 		cctx := classify.Context{InTxn: j.InTxn, TxnHasWrites: j.TxnWrites}
-		if d.Kind == compare.RowsDiffer && e.cfg.RecheckAfter > 0 && e.PG != nil && !(j.InTxn && j.TxnWrites) {
+		c := classify.Classify(classify.Input{Info: info, Primary: primary, Shadow: shadow, Diff: d, Ctx: cctx})
+		// Recheck (re-read both sides after the lag bound, bracketed) only when the
+		// rows themselves do not prove the cause. Cell-level evidence (a NULL from
+		// concat, a whole-hour shift, last-digit float noise, a Unicode case
+		// difference) cannot be produced by replication lag; ordering-based causes can.
+		if d.Kind == compare.RowsDiffer && e.cfg.RecheckAfter > 0 && e.PG != nil && !(j.InTxn && j.TxnWrites) && !conclusive(c) {
 			rd := e.recheck(ctx, j, mode)
 			cctx.Recheck = &rd
 			o.Rechecked = true
+			c = classify.Classify(classify.Input{Info: info, Primary: primary, Shadow: shadow, Diff: d, Ctx: cctx})
 		}
-		c := classify.Classify(classify.Input{Info: info, Primary: primary, Shadow: shadow, Diff: d, Ctx: cctx})
 		// Counterfactual: does Postgres reproduce Spanner's result when evaluated in
 		// Spanner's default time zone? If so, the time zone is the root cause.
 		if (c.Category == classify.Other || c.Category == classify.MissingRow) && e.PG != nil && d.Kind != compare.ErrorShadow {
@@ -585,4 +590,17 @@ func firstSortColumn(info sqlscan.Info, cols []rowset.Column) int {
 		}
 	}
 	return -1
+}
+
+// conclusive reports classifications backed by cell-level evidence that
+// replication lag cannot produce, so no recheck is needed.
+func conclusive(c classify.Result) bool {
+	if c.Confidence != "high" {
+		return false
+	}
+	switch c.Category {
+	case classify.NullSemantics, classify.FuncSemantics, classify.Precision, classify.Timezone:
+		return true
+	}
+	return false
 }

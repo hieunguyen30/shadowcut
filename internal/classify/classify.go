@@ -32,11 +32,12 @@ const (
 	ReplicationLag Category = "replication_lag"
 	MissingRow     Category = "missing_row" // persistent row difference (drift)
 	Unsupported    Category = "unsupported" // Spanner rejected the query
+	Timeout        Category = "timeout"     // the Spanner shadow query exceeded its time limit
 	Other          Category = "other"
 )
 
 // AllCategories lists categories in report order.
-var AllCategories = []Category{Collation, NullOrdering, NullSemantics, FuncSemantics, Precision, Timezone, Nondeterminism, Isolation, ReplicationLag, MissingRow, Unsupported, Other}
+var AllCategories = []Category{Collation, NullOrdering, NullSemantics, FuncSemantics, Precision, Timezone, Nondeterminism, Isolation, ReplicationLag, MissingRow, Unsupported, Timeout, Other}
 
 // Context carries execution context the proxy observed.
 type Context struct {
@@ -72,6 +73,9 @@ func Classify(in Input) Result {
 	case compare.Same:
 		return Result{Category: "", Confidence: "high", Reason: "no mismatch"}
 	case compare.ErrorShadow:
+		if isTimeout(in.Shadow.Err) {
+			return Result{Category: Timeout, Confidence: "high", Reason: "Spanner shadow query timed out: " + truncate(in.Shadow.Err, 200)}
+		}
 		return Result{Category: Unsupported, Confidence: "high", Reason: "Spanner rejected the query: " + truncate(in.Shadow.Err, 300)}
 	case compare.ErrorPrimary:
 		return Result{Category: Other, Confidence: "medium", Reason: "only PostgreSQL failed: " + truncate(in.Primary.Err, 300)}
@@ -107,8 +111,7 @@ func Classify(in Input) Result {
 	// LIMIT boundary: the engines ordered differently, so a different set of rows
 	// survived the LIMIT. Explain via the ORDER BY keys of the swapped rows.
 	if in.Info.HasLimit && len(in.Info.OrderBy) > 0 && len(onlyP) > 0 && len(onlyS) > 0 && len(keys) > 0 {
-		r := explainPair(in.Info, keys, in.Primary.Rows[onlyP[0]], in.Shadow.Rows[onlyS[0]], "limit")
-		if r.Category != Other {
+		if r, ok := explainBoundary(in, keys, onlyP, onlyS); ok {
 			return r
 		}
 	}
@@ -399,4 +402,73 @@ func selectFunc(info sqlscan.Info, col int) string {
 		return t[0].Text
 	}
 	return ""
+}
+
+func isTimeout(e string) bool {
+	e = strings.ToLower(e)
+	return strings.Contains(e, "deadline exceeded") || strings.Contains(e, "timeout") || strings.Contains(e, "canceling statement due to statement timeout")
+}
+
+// explainBoundary explains row-set differences of an ORDER BY ... LIMIT query.
+// Rows describing the same entity (all text cells equal) but with different
+// values are stale values (replication); the remaining unmatched rows were
+// selected differently at the LIMIT boundary and are explained through the sort
+// keys. The most code-relevant cause wins.
+func explainBoundary(in Input, keys []key, onlyP, onlyS []int) (Result, bool) {
+	usedS := map[int]bool{}
+	var restP []int
+	stale := 0
+	for _, pi := range onlyP {
+		matched := false
+		for _, si := range onlyS {
+			if !usedS[si] && sameEntity(in.Primary.Rows[pi], in.Shadow.Rows[si]) {
+				usedS[si] = true
+				matched = true
+				stale++
+				break
+			}
+		}
+		if !matched {
+			restP = append(restP, pi)
+		}
+	}
+	var restS []int
+	for _, si := range onlyS {
+		if !usedS[si] {
+			restS = append(restS, si)
+		}
+	}
+	priority := map[Category]int{Collation: 4, NullOrdering: 3, Nondeterminism: 2, Other: 0}
+	var best Result
+	bestP := -1
+	for i := 0; i < len(restP) && i < len(restS); i++ {
+		r := explainPair(in.Info, keys, in.Primary.Rows[restP[i]], in.Shadow.Rows[restS[i]], "limit")
+		if p := priority[r.Category]; p > bestP {
+			best, bestP = r, p
+		}
+	}
+	switch {
+	case bestP > 0:
+		if stale > 0 {
+			best.Reason += fmt.Sprintf("; also %d row(s) with stale values (replication)", stale)
+		}
+		return best, true
+	case stale > 0 && len(restP) == 0 && len(restS) == 0:
+		return Result{Category: ReplicationLag, Confidence: "medium", Reason: fmt.Sprintf("%d row(s) differ only in values updated at the source moments earlier (stale replica values)", stale)}, true
+	}
+	return Result{}, false
+}
+
+// sameEntity: every text cell is equal (numbers/times may differ).
+func sameEntity(a, b rowset.Row) bool {
+	texts := 0
+	for i := range a {
+		if a[i].K == rowset.Text || b[i].K == rowset.Text {
+			if !rowset.Equal(a[i], b[i]) {
+				return false
+			}
+			texts++
+		}
+	}
+	return texts > 0
 }

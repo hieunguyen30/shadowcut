@@ -1,0 +1,176 @@
+{
+  "started_at": "2026-11-16T10:23:42.266363099Z",
+  "updated_at": "2026-11-16T10:35:17.281281989Z",
+  "compared": 664,
+  "mismatches": 528,
+  "dropped": 7417,
+  "by_category": {
+    "collation": 73,
+    "missing_row": 9,
+    "nondeterministic_order": 63,
+    "other": 64,
+    "precision": 27,
+    "replication_lag": 139,
+    "timezone": 32,
+    "unsupported": 121
+  },
+  "queries": {
+    "select date_trunc ( ? , edit_ts ) as day , count ( * ) as edits from edits where wiki = ? group by ? order by ?": {
+      "name": "daily_counts",
+      "fingerprint": "select date_trunc ( ? , edit_ts ) as day , count ( * ) as edits from edits where wiki = ? group by ? order by ?",
+      "example": "SELECT date_trunc('day', edit_ts) AS day, count(*) AS edits\nFROM edits\nWHERE wiki = $1\nGROUP BY 1\nORDER BY 1",
+      "compared": 34,
+      "mismatches": 34,
+      "by_category": {
+        "other": 3,
+        "timezone": 31
+      },
+      "last_reason": "Postgres reproduces Spanner's result when the session time zone is America/Los_Angeles (counterfactual re-execution)"
+    },
+    "select distinct page_title , wiki from edits where page_title ilike ? || ? order by page_title limit ?": {
+      "name": "search_titles",
+      "fingerprint": "select distinct page_title , wiki from edits where page_title ilike ? || ? order by page_title limit ?",
+      "example": "SELECT DISTINCT page_title, wiki\nFROM edits\nWHERE page_title ILIKE $1 || '%'\nORDER BY page_title\nLIMIT 50",
+      "compared": 94,
+      "mismatches": 93,
+      "by_category": {
+        "collation": 6,
+        "missing_row": 1,
+        "unsupported": 86
+      },
+      "last_reason": "Spanner rejected the query: timeout: context deadline exceeded"
+    },
+    "select id , concat ( user_name , ? , wiki ) as label from edits order by id desc limit ?": {
+      "name": "editor_labels",
+      "fingerprint": "select id , concat ( user_name , ? , wiki ) as label from edits order by id desc limit ?",
+      "example": "SELECT id, concat(user_name, ' @ ', wiki) AS label\nFROM edits\nORDER BY id DESC\nLIMIT 50",
+      "compared": 37,
+      "mismatches": 37,
+      "by_category": {
+        "other": 1,
+        "replication_lag": 36
+      },
+      "last_reason": "results converged when re-run after the replication-lag bound"
+    },
+    "select id , type , actor_login , org_login , created_at , payload from gh_events where repo_name = ? order by created_at desc , id desc limit ?": {
+      "name": "gh_repo_events",
+      "fingerprint": "select id , type , actor_login , org_login , created_at , payload from gh_events where repo_name = ? order by created_at desc , id desc limit ?",
+      "example": "SELECT id, type, actor_login, org_login, created_at, payload\nFROM gh_events\nWHERE repo_name = $1\nORDER BY created_at DESC, id DESC\nLIMIT 20",
+      "compared": 19,
+      "mismatches": 0
+    },
+    "select id , wiki , page_title , edit_ts from edits order by edit_ts desc limit ? offset ?": {
+      "name": "feed_offset",
+      "fingerprint": "select id , wiki , page_title , edit_ts from edits order by edit_ts desc limit ? offset ?",
+      "example": "SELECT id, wiki, page_title, edit_ts\nFROM edits\nORDER BY edit_ts DESC\nLIMIT 25 OFFSET $1",
+      "compared": 28,
+      "mismatches": 28,
+      "by_category": {
+        "replication_lag": 28
+      },
+      "last_reason": "results converged when re-run after the replication-lag bound"
+    },
+    "select id , wiki , page_title , size_delta , edit_ts from edits where user_name = ? order by edit_ts desc limit ?": {
+      "name": "recent_edits_by_user",
+      "fingerprint": "select id , wiki , page_title , size_delta , edit_ts from edits where user_name = ? order by edit_ts desc limit ?",
+      "example": "SELECT id, wiki, page_title, size_delta, edit_ts\nFROM edits\nWHERE user_name = $1\nORDER BY edit_ts DESC\nLIMIT 50",
+      "compared": 69,
+      "mismatches": 9,
+      "by_category": {
+        "replication_lag": 9
+      },
+      "last_reason": "results converged when re-run after the replication-lag bound"
+    },
+    "select id , wiki , page_title , user_name , edit_ts from edits where edit_ts \u003e= ? and edit_ts \u003c ? order by edit_ts , id limit ?": {
+      "name": "edits_in_range",
+      "fingerprint": "select id , wiki , page_title , user_name , edit_ts from edits where edit_ts \u003e= ? and edit_ts \u003c ? order by edit_ts , id limit ?",
+      "example": "SELECT id, wiki, page_title, user_name, edit_ts\nFROM edits\nWHERE edit_ts \u003e= $1 AND edit_ts \u003c $2\nORDER BY edit_ts, id\nLIMIT 500",
+      "compared": 47,
+      "mismatches": 0
+    },
+    "select id , wiki , page_title , user_name , size_delta , edit_ts from edits order by edit_ts desc , id desc limit ?": {
+      "name": "feed_first_page",
+      "fingerprint": "select id , wiki , page_title , user_name , size_delta , edit_ts from edits order by edit_ts desc , id desc limit ?",
+      "example": "SELECT id, wiki, page_title, user_name, size_delta, edit_ts\nFROM edits\nORDER BY edit_ts DESC, id DESC\nLIMIT 25",
+      "compared": 57,
+      "mismatches": 57,
+      "by_category": {
+        "other": 2,
+        "replication_lag": 55
+      },
+      "last_reason": "results converged when re-run after the replication-lag bound"
+    },
+    "select id , wiki , page_title , user_name , size_delta , edit_ts from edits where ( edit_ts , id ) \u003c ( ? , ? ) order by edit_ts desc , id desc limit ?": {
+      "name": "feed_page",
+      "fingerprint": "select id , wiki , page_title , user_name , size_delta , edit_ts from edits where ( edit_ts , id ) \u003c ( ? , ? ) order by edit_ts desc , id desc limit ?",
+      "example": "SELECT id, wiki, page_title, user_name, size_delta, edit_ts\nFROM edits\nWHERE (edit_ts, id) \u003c ($1, $2)\nORDER BY edit_ts DESC, id DESC\nLIMIT 25",
+      "compared": 35,
+      "mismatches": 35,
+      "by_category": {
+        "unsupported": 35
+      },
+      "last_reason": "Spanner rejected the query: Unsupported PostgreSQL expression type: RowCompareExpr"
+    },
+    "select repo_name , count ( * ) as events from gh_events group by repo_name order by events desc limit ?": {
+      "name": "gh_top_repos",
+      "fingerprint": "select repo_name , count ( * ) as events from gh_events group by repo_name order by events desc limit ?",
+      "example": "SELECT repo_name, count(*) AS events\nFROM gh_events\nGROUP BY repo_name\nORDER BY events DESC\nLIMIT 20",
+      "compared": 29,
+      "mismatches": 29,
+      "by_category": {
+        "nondeterministic_order": 29
+      },
+      "last_reason": "rows tie on every ORDER BY key; each engine broke the tie differently (order)"
+    },
+    "select title , edit_count from pages where wiki = ? and title \u003e ? order by title limit ?": {
+      "name": "pages_alpha",
+      "fingerprint": "select title , edit_count from pages where wiki = ? and title \u003e ? order by title limit ?",
+      "example": "SELECT title, edit_count\nFROM pages\nWHERE wiki = $1 AND title \u003e $2\nORDER BY title\nLIMIT 50",
+      "compared": 57,
+      "mismatches": 48,
+      "by_category": {
+        "collation": 40,
+        "missing_row": 8
+      },
+      "last_reason": "text sort key \"1887年黄河决口\" vs \"“四个全面”战略布局\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+    },
+    "select user_name , count ( * ) as edits from edits where wiki = ? group by user_name order by user_name limit ?": {
+      "name": "top_editors",
+      "fingerprint": "select user_name , count ( * ) as edits from edits where wiki = ? group by user_name order by user_name limit ?",
+      "example": "SELECT user_name, count(*) AS edits\nFROM edits\nWHERE wiki = $1\nGROUP BY user_name\nORDER BY user_name\nLIMIT 100",
+      "compared": 35,
+      "mismatches": 35,
+      "by_category": {
+        "collation": 27,
+        "nondeterministic_order": 6,
+        "replication_lag": 2
+      },
+      "last_reason": "rows tie on every ORDER BY key; each engine broke the tie differently (limit)"
+    },
+    "select wiki , count ( * ) as edits , avg ( size_delta ) as avg_delta , avg ( growth_ratio ) as avg_growth , sum ( growth_ratio ) as sum_growth from edits group by wiki order by edits desc , wiki": {
+      "name": "wiki_stats",
+      "fingerprint": "select wiki , count ( * ) as edits , avg ( size_delta ) as avg_delta , avg ( growth_ratio ) as avg_growth , sum ( growth_ratio ) as sum_growth from edits group by wiki order by edits desc , wiki",
+      "example": "SELECT wiki, count(*) AS edits, avg(size_delta) AS avg_delta, avg(growth_ratio) AS avg_growth, sum(growth_ratio) AS sum_growth\nFROM edits\nGROUP BY wiki\nORDER BY edits DESC, wiki",
+      "compared": 27,
+      "mismatches": 27,
+      "by_category": {
+        "precision": 27
+      },
+      "last_reason": "edits: 35403 vs 39179; avg_delta: 950.7990848233200576 vs 943.7550218229153373; avg_growth: 1.1719927471847829 vs 1.1635938108952057"
+    },
+    "select wiki , title , edit_count , last_edit_ts from pages where wiki = ? order by edit_count desc limit ?": {
+      "name": "top_pages",
+      "fingerprint": "select wiki , title , edit_count , last_edit_ts from pages where wiki = ? order by edit_count desc limit ?",
+      "example": "SELECT wiki, title, edit_count, last_edit_ts\nFROM pages\nWHERE wiki = $1\nORDER BY edit_count DESC\nLIMIT $2",
+      "compared": 96,
+      "mismatches": 96,
+      "by_category": {
+        "nondeterministic_order": 28,
+        "other": 58,
+        "replication_lag": 9,
+        "timezone": 1
+      },
+      "last_reason": "7/7 rows differ persistently (still different after recheck) and could not be attributed"
+    }
+  }
+}

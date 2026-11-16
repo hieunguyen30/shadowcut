@@ -11,7 +11,7 @@ $C up -d postgres spanner kafka connect toxiproxy
 echo "waiting for PGAdapter..."; for i in $(seq 1 60); do docker run --rm --network shadowcut_default postgres:16 pg_isready -h spanner -q && break; sleep 2; done
 go run ./cmd/shadowcut schema apply
 ./scripts/register-connector.sh
-$C build
+$C --profile full --profile cdc --profile ingest build
 $C --profile cdc --profile ingest up -d applier ingest-wiki
 [ "${OBS:-0}" = 1 ] && $C --profile obs up -d prometheus grafana
 [ "${FULL:-0}" = 1 ] && $C --profile full up -d shadow demoapp

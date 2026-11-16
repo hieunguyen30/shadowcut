@@ -273,3 +273,29 @@ func TestMinMaxCollation(t *testing.T) {
 		t.Fatalf("got %+v", r)
 	}
 }
+
+func TestBoundaryMixedStaleAndTies(t *testing.T) {
+	// one row has a stale count (lag), and a tie at the LIMIT boundary resolved differently
+	p := res([]string{"wiki", "title", "n"},
+		rowset.Row{txt("en"), txt("Reports"), num(97)}, rowset.Row{txt("en"), txt("Garbage"), num(12)})
+	s := res([]string{"wiki", "title", "n"},
+		rowset.Row{txt("en"), txt("Reports"), num(96)}, rowset.Row{txt("en"), txt("Anikó"), num(12)})
+	r := run(t, "SELECT wiki, title, edit_count AS n FROM pages WHERE wiki = $1 ORDER BY n DESC LIMIT 2", p, s, Context{})
+	if r.Category != Nondeterminism {
+		t.Fatalf("got %+v", r)
+	}
+	// only stale values -> replication lag
+	p = res([]string{"wiki", "title", "n"}, rowset.Row{txt("en"), txt("Reports"), num(97)})
+	s = res([]string{"wiki", "title", "n"}, rowset.Row{txt("en"), txt("Reports"), num(96)})
+	if r := run(t, "SELECT wiki, title, edit_count AS n FROM pages ORDER BY n DESC LIMIT 1", p, s, Context{}); r.Category != ReplicationLag {
+		t.Fatalf("stale only: got %+v", r)
+	}
+}
+
+func TestTimeoutIsNotUnsupported(t *testing.T) {
+	p := res([]string{"x"}, rowset.Row{num(1)})
+	s := &rowset.Result{Err: "timeout: context deadline exceeded"}
+	if r := run(t, "SELECT x FROM t", p, s, Context{}); r.Category != Timeout {
+		t.Fatalf("got %+v", r)
+	}
+}

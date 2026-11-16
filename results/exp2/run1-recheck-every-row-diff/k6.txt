@@ -1,0 +1,40 @@
+
+running (11m03.7s), 6/6 VUs, 8473 complete and 0 interrupted iterations
+default   [  99% ] 6 VUs  09m56.6s/10m0s
+
+running (11m04.7s), 6/6 VUs, 8488 complete and 0 interrupted iterations
+default   [ 100% ] 6 VUs  09m57.6s/10m0s
+
+running (11m05.7s), 6/6 VUs, 8504 complete and 0 interrupted iterations
+default   [ 100% ] 6 VUs  09m58.6s/10m0s
+
+running (11m06.7s), 6/6 VUs, 8520 complete and 0 interrupted iterations
+default   [ 100% ] 6 VUs  09m59.6s/10m0s
+
+running (11m07.7s), 0/6 VUs, 8533 complete and 0 interrupted iterations
+default ✓ [ 100% ] 6 VUs  10m0s
+
+
+  █ TOTAL RESULTS 
+
+    HTTP
+    http_req_duration..............: avg=19.36ms  p(50)=3.47ms   p(95)=119.95ms max=2.43s   
+      { expected_response:true }...: avg=19.36ms  p(50)=3.47ms   p(95)=119.95ms max=2.43s   
+    http_req_failed................: 0.00%  0 out of 9065
+    http_reqs......................: 9065   13.577155/s
+
+    EXECUTION
+    iteration_duration.............: avg=422.03ms p(50)=422.11ms p(95)=601.36ms max=921.99ms
+    iterations.....................: 8533   12.780349/s
+    vus............................: 6      min=6         max=6
+    vus_max........................: 6      min=6         max=6
+
+    NETWORK
+    data_received..................: 74 MB  110 kB/s
+    data_sent......................: 881 kB 1.3 kB/s
+
+
+
+
+running (11m07.7s), 0/6 VUs, 8533 complete and 0 interrupted iterations
+default ✓ [ 100% ] 6 VUs  10m0s
