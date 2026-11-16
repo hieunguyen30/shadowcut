@@ -24,6 +24,7 @@ const (
 	Collation      Category = "collation"
 	NullOrdering   Category = "null_ordering"
 	NullSemantics  Category = "null_semantics" // e.g. concat() returns NULL on Spanner
+	FuncSemantics  Category = "function_semantics" // a function returns a different value (e.g. Unicode upper())
 	Precision      Category = "precision"
 	Timezone       Category = "timezone"
 	Nondeterminism Category = "nondeterministic_order" // ties / missing ORDER BY
@@ -35,7 +36,7 @@ const (
 )
 
 // AllCategories lists categories in report order.
-var AllCategories = []Category{Collation, NullOrdering, NullSemantics, Precision, Timezone, Nondeterminism, Isolation, ReplicationLag, MissingRow, Unsupported, Other}
+var AllCategories = []Category{Collation, NullOrdering, NullSemantics, FuncSemantics, Precision, Timezone, Nondeterminism, Isolation, ReplicationLag, MissingRow, Unsupported, Other}
 
 // Context carries execution context the proxy observed.
 type Context struct {
@@ -114,11 +115,14 @@ func Classify(in Input) Result {
 	if in.Info.HasLimit && len(in.Info.OrderBy) == 0 {
 		return Result{Category: Nondeterminism, Confidence: "medium", Reason: "LIMIT without ORDER BY: each engine may return any qualifying rows"}
 	}
-	if in.Ctx.Recheck != nil {
-		return Result{Category: MissingRow, Confidence: "medium", Reason: fmt.Sprintf("%d row(s) only in Postgres, %d only in Spanner, still different after recheck (persistent drift)", len(onlyP), len(onlyS))}
-	}
 	if len(onlyS) == 0 || len(onlyP) == 0 {
+		if in.Ctx.Recheck != nil {
+			return Result{Category: MissingRow, Confidence: "medium", Reason: fmt.Sprintf("%d row(s) only in Postgres, %d only in Spanner, still different after recheck (persistent drift)", len(onlyP), len(onlyS))}
+		}
 		return Result{Category: MissingRow, Confidence: "low", Reason: fmt.Sprintf("%d row(s) only in Postgres, %d only in Spanner (no recheck performed; may be replication lag)", len(onlyP), len(onlyS))}
+	}
+	if in.Ctx.Recheck != nil {
+		return Result{Category: Other, Confidence: "low", Reason: fmt.Sprintf("%d/%d rows differ persistently (still different after recheck) and could not be attributed", len(onlyP), len(onlyS))}
 	}
 	return Result{Category: Other, Confidence: "low", Reason: fmt.Sprintf("%d/%d differing rows could not be attributed", len(onlyP), len(onlyS))}
 }
@@ -231,7 +235,7 @@ func explainCells(in Input, onlyP, onlyS []int) (Result, bool) {
 			if rowset.Equal(pr[c], sr[c]) {
 				continue
 			}
-			cat, why := explainCell(in, pr[c], sr[c])
+			cat, why := explainCell(in, c, bestEq > 0, pr[c], sr[c])
 			votes[cat]++
 			if len(reasons) < 3 {
 				name := ""
@@ -266,7 +270,14 @@ func explainCells(in Input, onlyP, onlyS []int) (Result, bool) {
 	return Result{Category: bestCat, Confidence: conf, Reason: strings.Join(reasons, "; ")}, true
 }
 
-func explainCell(in Input, p, s rowset.Value) (Category, string) {
+func explainCell(in Input, col int, anchored bool, p, s rowset.Value) (Category, string) {
+	// Function-based attributions need the rows to be anchored by another equal
+	// column; otherwise the pairing is arbitrary (e.g. different rows at a LIMIT
+	// boundary) and the LIMIT-boundary analysis must decide instead.
+	fn := ""
+	if anchored {
+		fn = selectFunc(in.Info, col)
+	}
 	if p.IsNull() != s.IsNull() {
 		for f := range in.Info.Functions {
 			if nullSemanticFuncs[f] {
@@ -297,6 +308,12 @@ func explainCell(in Input, p, s rowset.Value) (Category, string) {
 		return Other, fmt.Sprintf("timestamps differ by %s", d)
 	}
 	if p.K == rowset.Text && s.K == rowset.Text {
+		switch {
+		case collationAggs[fn]:
+			return Collation, fmt.Sprintf("%s() over text returns %q vs %q: the engines order strings differently", fn, clip(p.S), clip(s.S))
+		case caseFuncs[fn]:
+			return FuncSemantics, fmt.Sprintf("%s() returns %q vs %q (Unicode case mapping differs)", fn, clip(p.S), clip(s.S))
+		}
 		if tp, ok1 := parseTS(p.S); ok1 {
 			if ts, ok2 := parseTS(s.S); ok2 {
 				d := tp.Sub(ts)
@@ -367,4 +384,20 @@ func truncate(s string, n int) string {
 		return s[:n] + "..."
 	}
 	return s
+}
+
+var collationAggs = map[string]bool{"min": true, "max": true, "string_agg": true, "array_agg": true}
+var caseFuncs = map[string]bool{"upper": true, "lower": true, "initcap": true}
+
+// selectFunc returns the outermost function name of select-list column col,
+// or "" when the column is not a plain function call.
+func selectFunc(info sqlscan.Info, col int) string {
+	if col < 0 || col >= len(info.Select) {
+		return ""
+	}
+	t := info.Select[col].Tokens
+	if len(t) >= 2 && t[0].Kind == sqlscan.TIdent && t[1].IsPunct("(") {
+		return t[0].Text
+	}
+	return ""
 }

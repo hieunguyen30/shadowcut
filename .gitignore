@@ -11,3 +11,4 @@ results/logs/*.log
 !terraform/*.tfvars.example
 state/
 data/*.jsonl
+results/scratch-*

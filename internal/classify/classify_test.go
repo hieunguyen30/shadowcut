@@ -250,3 +250,26 @@ func TestPropFloatPrecision(t *testing.T) {
 func nextafter(f float64) float64 {
 	return f + f*2.2e-16*float64(1+rand.Intn(2))
 }
+
+func TestFunctionSemanticsNeedsAnchor(t *testing.T) {
+	// anchored by id: upper() differs -> function_semantics
+	p := res([]string{"id", "t"}, rowset.Row{num(1), txt("STRAßE")})
+	s := res([]string{"id", "t"}, rowset.Row{num(1), txt("STRASSE")})
+	if r := run(t, "SELECT id, upper(page_title) AS t FROM edits ORDER BY id", p, s, Context{}); r.Category != FuncSemantics {
+		t.Fatalf("anchored: got %+v", r)
+	}
+	// unanchored single column at a LIMIT boundary: ordering decides -> collation
+	p = res([]string{"t"}, rowset.Row{txt("ági")})
+	s = res([]string{"t"}, rowset.Row{txt("\"dragons\"")})
+	if r := run(t, "SELECT lower(title) AS t FROM pages ORDER BY t LIMIT 1", p, s, Context{}); r.Category != Collation {
+		t.Fatalf("unanchored: got %+v", r)
+	}
+}
+
+func TestMinMaxCollation(t *testing.T) {
+	p := res([]string{"wiki", "last"}, rowset.Row{txt("an"), txt("Torre d'os")})
+	s := res([]string{"wiki", "last"}, rowset.Row{txt("an"), txt("Torre de Sant")})
+	if r := run(t, "SELECT wiki, max(title) AS last FROM pages GROUP BY wiki ORDER BY wiki", p, s, Context{}); r.Category != Collation {
+		t.Fatalf("got %+v", r)
+	}
+}
