@@ -192,6 +192,11 @@ func Evaluate(p Policy, s Signals, now time.Time) Decision {
 		if s.BacklogAge != nil && *s.BacklogAge > lag {
 			lag, src = *s.BacklogAge, "oldest unapplied CDC record"
 		}
+		// While the connector is not publishing, everything committed since its last
+		// heartbeat may be missing downstream: heartbeat age bounds the lag too.
+		if s.HeartbeatAge != nil && *s.HeartbeatAge-HeartbeatInterval > lag {
+			lag, src = *s.HeartbeatAge-HeartbeatInterval, "source heartbeat age (CDC not publishing)"
+		}
 		add("replication.lag", lag <= p.MaxLag.Duration, fmt.Sprintf("lag %s from %s (max %s)", lag.Round(time.Millisecond), src, p.MaxLag))
 	}
 	switch {
@@ -328,3 +333,6 @@ func MeasureBacklog(ctx context.Context, s *Signals, brokers []string, sp *pgxpo
 	}
 	s.BacklogAge = &age
 }
+
+// HeartbeatInterval is Debezium's heartbeat.interval.ms (deploy/debezium).
+const HeartbeatInterval = time.Second

@@ -160,7 +160,7 @@ func exp4Cmd() *cobra.Command {
 				_ = state.WriteJSON(filepath.Join(out, sc.Name+".json"), r)
 				slog.Info("scenario done", "scenario", sc.Name, "acked", r.Acked, "lost", r.Lost, "dup_effects", r.DupEffects, "dup_deliveries", r.DupDeliveries, "recovery_s", r.RecoverySeconds, "gate_correct", r.GateCorrect)
 			}
-			if len(want) == 0 {
+			if len(want) == 0 || want["crash_mid_cutover"] {
 				if crash, err := runCrashMidCutover(ctx, pg, sp); err != nil {
 					slog.Error("crash_mid_cutover failed", "err", err)
 				} else {

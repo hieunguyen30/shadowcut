@@ -105,3 +105,15 @@ func TestPropGateMonotone(t *testing.T) {
 		}
 	})
 }
+
+// BUG-005 (second part): while Debezium is down nothing reaches Kafka, so the
+// backlog is empty; the stale source heartbeat must still block.
+func TestGateUsesHeartbeatAgeAsLag(t *testing.T) {
+	now := time.Now()
+	s := healthy(now)
+	hb := 8 * time.Second // below MaxHeartbeatAge (15s) but above MaxLag (5s)
+	s.HeartbeatAge = &hb
+	if d := Evaluate(DefaultPolicy(), s, now); d.Go {
+		t.Fatalf("expected NO-GO: connector silent for 8s")
+	}
+}

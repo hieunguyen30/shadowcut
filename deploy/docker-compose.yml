@@ -110,7 +110,7 @@ services:
 
   shadow:
     <<: *go-service
-    command: ["shadowcut", "shadow", "proxy", "--listen", ":5432", "--out", "/state/shadow"]
+    command: ["shadowcut", "shadow", "proxy", "--listen", ":5432", "--out", "/state/shadow", "--workers", "8"]
     environment:
       PG_DSN: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}?sslmode=disable
       SPANNER_DSN: postgres://spanner:5432/${SPANNER_DATABASE}?sslmode=disable

@@ -170,8 +170,11 @@ func (c *Controller) Rollback(ctx context.Context) (int, error) {
 		return 0, err
 	}
 	if st.Mode == "postgres" && (st.Step == StepIdle || st.Step == StepRolledBack) {
-		c.log().Info("already on postgres")
-		return 0, nil
+		// Already on Postgres; still apply any outstanding journal entries (e.g. from
+		// writes that reached Spanner outside a cutover). Replay is idempotent.
+		n, err := c.ReplayJournal(ctx)
+		c.log().Info("already on postgres", "journal_entries_replayed", n)
+		return n, err
 	}
 	if st.Step != StepRBReplayed {
 		if err := c.set(ctx, "rollback", "frozen", StepRBFrozen, "writes frozen for rollback"); err != nil {

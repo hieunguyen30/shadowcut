@@ -1,0 +1,39 @@
+time=2026-11-16T04:45:38.598-05:00 level=INFO msg="injecting fault" scenario=baseline
+time=2026-11-16T04:45:58.600-05:00 level=INFO msg=healed scenario=baseline
+time=2026-11-16T04:46:17.898-05:00 level=INFO msg="scenario done" scenario=baseline acked=2249 lost=0 dup_effects=0 dup_deliveries=0 recovery_s=0.1125058999999986 gate_correct=true
+time=2026-11-16T04:46:28.144-05:00 level=INFO msg="injecting fault" scenario=kill_applier
+time=2026-11-16T04:46:48.850-05:00 level=INFO msg=healed scenario=kill_applier
+time=2026-11-16T04:47:07.424-05:00 level=INFO msg="scenario done" scenario=kill_applier acked=2250 lost=0 dup_effects=0 dup_deliveries=0 recovery_s=1.4449942 gate_correct=true
+time=2026-11-16T04:47:17.692-05:00 level=INFO msg="injecting fault" scenario=kafka_partition
+time=2026-11-16T04:47:37.700-05:00 level=INFO msg=healed scenario=kafka_partition
+time=2026-11-16T04:47:57.085-05:00 level=INFO msg="scenario done" scenario=kafka_partition acked=2250 lost=0 dup_effects=0 dup_deliveries=0 recovery_s=6.130372299999998 gate_correct=true
+time=2026-11-16T04:48:07.367-05:00 level=INFO msg="injecting fault" scenario=spanner_latency
+time=2026-11-16T04:48:27.369-05:00 level=INFO msg=healed scenario=spanner_latency
+time=2026-11-16T04:48:46.817-05:00 level=INFO msg="scenario done" scenario=spanner_latency acked=2155 lost=0 dup_effects=0 dup_deliveries=0 recovery_s=1.145119900000001 gate_correct=true
+time=2026-11-16T04:48:57.117-05:00 level=INFO msg="injecting fault" scenario=spanner_partition
+time=2026-11-16T04:49:17.121-05:00 level=INFO msg=healed scenario=spanner_partition
+time=2026-11-16T04:49:36.576-05:00 level=INFO msg="scenario done" scenario=spanner_partition acked=2249 lost=0 dup_effects=0 dup_deliveries=0 recovery_s=15.224090799999999 gate_correct=true
+time=2026-11-16T04:49:46.879-05:00 level=INFO msg="injecting fault" scenario=kill_connect
+time=2026-11-16T04:50:07.836-05:00 level=INFO msg=healed scenario=kill_connect
+time=2026-11-16T04:50:27.009-05:00 level=INFO msg="scenario done" scenario=kill_connect acked=2250 lost=0 dup_effects=0 dup_deliveries=85 recovery_s=11.2105536 gate_correct=true
+time=2026-11-16T04:50:27.184-05:00 level=INFO msg="already on postgres" journal_entries_replayed=0
+time=2026-11-16T04:50:30.186-05:00 level=INFO msg=crash_mid_cutover step="cutover (crash injected after freeze)"
+time=2026-11-16T04:50:30.196-05:00 level=INFO msg=cutover mode=frozen step=frozen note="writes frozen"
+time=2026-11-16T04:50:30.196-05:00 level=INFO msg=crash_mid_cutover step="crashed; control state = frozen/frozen"
+time=2026-11-16T04:50:30.287-05:00 level=INFO msg="routing mode changed" from=postgres to=frozen
+time=2026-11-16T04:50:33.197-05:00 level=INFO msg=crash_mid_cutover step="cutover resumed"
+time=2026-11-16T04:50:36.499-05:00 level=INFO msg="CDC drained" wal_target=0/F0E9D00
+time=2026-11-16T04:50:36.507-05:00 level=INFO msg=cutover mode=frozen step=drained note="CDC drained"
+time=2026-11-16T04:50:36.887-05:00 level=INFO msg="routing mode changed" from=frozen to=spanner
+time=2026-11-16T04:50:36.887-05:00 level=INFO msg=cutover mode=spanner step=cutover_done note="app on Spanner"
+time=2026-11-16T04:50:36.887-05:00 level=INFO msg=crash_mid_cutover step="cutover complete; state = spanner/cutover_done"
+time=2026-11-16T04:51:06.888-05:00 level=INFO msg=crash_mid_cutover step="rollback (crash injected after freeze)"
+time=2026-11-16T04:51:06.898-05:00 level=INFO msg=rollback mode=frozen step=rollback_frozen note="writes frozen for rollback"
+time=2026-11-16T04:51:06.898-05:00 level=INFO msg=crash_mid_cutover step="crashed; control state = frozen/rollback_frozen"
+time=2026-11-16T04:51:06.987-05:00 level=INFO msg="routing mode changed" from=spanner to=frozen
+time=2026-11-16T04:51:08.915-05:00 level=INFO msg=rollback mode=frozen step=rollback_frozen note="writes frozen for rollback"
+time=2026-11-16T04:51:09.697-05:00 level=INFO msg=rollback mode=frozen step=rollback_replayed note="0 journal entries applied"
+time=2026-11-16T04:51:09.706-05:00 level=INFO msg=rollback mode=postgres step=rolled_back note="app on Postgres"
+time=2026-11-16T04:51:09.706-05:00 level=INFO msg=crash_mid_cutover step="rollback complete; 0 journal entries replayed"
+time=2026-11-16T04:51:09.787-05:00 level=INFO msg="routing mode changed" from=frozen to=postgres
+time=2026-11-16T04:51:12.921-05:00 level=INFO msg=crash_mid_cutover step="verified: acked=56 lost=0 missing_in_spanner=0 dupes=0"

@@ -1,0 +1,22 @@
+time=2026-11-16T04:51:39.293-05:00 level=INFO msg="already on postgres" journal_entries_replayed=0
+time=2026-11-16T04:51:42.295-05:00 level=INFO msg=crash_mid_cutover step="cutover (crash injected after freeze)"
+time=2026-11-16T04:51:42.312-05:00 level=INFO msg=cutover mode=frozen step=frozen note="writes frozen"
+time=2026-11-16T04:51:42.312-05:00 level=INFO msg=crash_mid_cutover step="crashed; control state = frozen/frozen"
+time=2026-11-16T04:51:42.395-05:00 level=INFO msg="routing mode changed" from=postgres to=frozen
+time=2026-11-16T04:51:45.312-05:00 level=INFO msg=crash_mid_cutover step="cutover resumed"
+time=2026-11-16T04:51:48.118-05:00 level=INFO msg="CDC drained" wal_target=0/F51E3C8
+time=2026-11-16T04:51:48.128-05:00 level=INFO msg=cutover mode=frozen step=drained note="CDC drained"
+time=2026-11-16T04:51:48.534-05:00 level=INFO msg=cutover mode=spanner step=cutover_done note="app on Spanner"
+time=2026-11-16T04:51:48.534-05:00 level=INFO msg=crash_mid_cutover step="cutover complete; state = spanner/cutover_done"
+time=2026-11-16T04:51:48.596-05:00 level=INFO msg="routing mode changed" from=frozen to=spanner
+time=2026-11-16T04:51:48.632-05:00 level=INFO msg=crash_mid_cutover step="applier paused (emulator single-RW-transaction workaround)"
+time=2026-11-16T04:52:18.747-05:00 level=INFO msg=crash_mid_cutover step="rollback (crash injected after freeze)"
+time=2026-11-16T04:52:18.760-05:00 level=INFO msg=rollback mode=frozen step=rollback_frozen note="writes frozen for rollback"
+time=2026-11-16T04:52:18.760-05:00 level=INFO msg=crash_mid_cutover step="crashed; control state = frozen/rollback_frozen"
+time=2026-11-16T04:52:18.796-05:00 level=INFO msg="routing mode changed" from=spanner to=frozen
+time=2026-11-16T04:52:20.773-05:00 level=INFO msg=rollback mode=frozen step=rollback_frozen note="writes frozen for rollback"
+time=2026-11-16T04:52:21.723-05:00 level=INFO msg=rollback mode=frozen step=rollback_replayed note="20 journal entries applied"
+time=2026-11-16T04:52:21.733-05:00 level=INFO msg=rollback mode=postgres step=rolled_back note="app on Postgres"
+time=2026-11-16T04:52:21.733-05:00 level=INFO msg=crash_mid_cutover step="rollback complete; 20 journal entries replayed"
+time=2026-11-16T04:52:21.795-05:00 level=INFO msg="routing mode changed" from=frozen to=postgres
+time=2026-11-16T04:52:24.954-05:00 level=INFO msg=crash_mid_cutover step="verified: acked=64 lost=0 missing_in_spanner=0 dupes=0"

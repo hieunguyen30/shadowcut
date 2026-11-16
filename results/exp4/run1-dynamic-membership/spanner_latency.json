@@ -1,0 +1,360 @@
+{
+  "scenario": "spanner_latency",
+  "desc": "Toxiproxy adds 500 ms (+/-100) latency on applier -\u003e Spanner",
+  "env": "local Docker: PostgreSQL 16 vs Cloud Spanner emulator + PGAdapter (EMULATOR, not real Spanner)",
+  "start": "2026-11-16T09:19:17.7953403Z",
+  "fault_seconds": 20,
+  "acked_writes": 2250,
+  "failed_writes": 0,
+  "rows_in_spanner": 2250,
+  "lost": 0,
+  "extra": 0,
+  "value_mismatch": 0,
+  "duplicate_deliveries_kafka": 0,
+  "duplicate_effects": 0,
+  "recovery_seconds": 1.0068717000000014,
+  "drain_after_writer_stop_seconds": 0.5833838,
+  "expect_nogo": false,
+  "nogo_during_fault": true,
+  "go_after_recovery": true,
+  "gate_correct": false,
+  "max_lag_ms": 5096,
+  "timeline": [
+    {
+      "t_s": 1.0135618,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 1011,
+      "decision": "GO"
+    },
+    {
+      "t_s": 2.0133177,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 891,
+      "decision": "GO"
+    },
+    {
+      "t_s": 3.0114291,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 769,
+      "decision": "GO"
+    },
+    {
+      "t_s": 4.013603,
+      "phase": "pre",
+      "lag_ms": 3830,
+      "heartbeat_age_ms": 139,
+      "decision": "GO"
+    },
+    {
+      "t_s": 5.0115023,
+      "phase": "pre",
+      "lag_ms": 1015,
+      "heartbeat_age_ms": 23,
+      "decision": "GO"
+    },
+    {
+      "t_s": 6.0108463,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 923,
+      "decision": "GO"
+    },
+    {
+      "t_s": 7.0118868,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 803,
+      "decision": "GO"
+    },
+    {
+      "t_s": 8.011172,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 687,
+      "decision": "GO"
+    },
+    {
+      "t_s": 9.010969,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 568,
+      "decision": "GO"
+    },
+    {
+      "t_s": 10.0109654,
+      "phase": "fault",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 452,
+      "decision": "GO"
+    },
+    {
+      "t_s": 11.0104545,
+      "phase": "fault",
+      "lag_ms": 1016,
+      "heartbeat_age_ms": 335,
+      "decision": "GO"
+    },
+    {
+      "t_s": 12.0138833,
+      "phase": "fault",
+      "lag_ms": 2032,
+      "heartbeat_age_ms": 219,
+      "decision": "GO"
+    },
+    {
+      "t_s": 13.0092065,
+      "phase": "fault",
+      "lag_ms": 3050,
+      "heartbeat_age_ms": 102,
+      "decision": "GO"
+    },
+    {
+      "t_s": 14.0111484,
+      "phase": "fault",
+      "lag_ms": 3050,
+      "heartbeat_age_ms": 1002,
+      "decision": "GO"
+    },
+    {
+      "t_s": 15.0111944,
+      "phase": "fault",
+      "lag_ms": 2032,
+      "heartbeat_age_ms": 888,
+      "decision": "GO"
+    },
+    {
+      "t_s": 16.0163701,
+      "phase": "fault",
+      "lag_ms": 3053,
+      "heartbeat_age_ms": 766,
+      "decision": "GO"
+    },
+    {
+      "t_s": 17.0118081,
+      "phase": "fault",
+      "lag_ms": 3058,
+      "heartbeat_age_ms": 644,
+      "decision": "GO"
+    },
+    {
+      "t_s": 18.0163692,
+      "phase": "fault",
+      "lag_ms": 4073,
+      "heartbeat_age_ms": 528,
+      "decision": "GO"
+    },
+    {
+      "t_s": 19.0117704,
+      "phase": "fault",
+      "lag_ms": 4080,
+      "heartbeat_age_ms": 407,
+      "decision": "GO"
+    },
+    {
+      "t_s": 20.012313,
+      "phase": "fault",
+      "lag_ms": 5096,
+      "heartbeat_age_ms": 291,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 21.0114249,
+      "phase": "fault",
+      "lag_ms": 4070,
+      "heartbeat_age_ms": 173,
+      "decision": "GO"
+    },
+    {
+      "t_s": 22.0133931,
+      "phase": "fault",
+      "lag_ms": 4070,
+      "heartbeat_age_ms": 58,
+      "decision": "GO"
+    },
+    {
+      "t_s": 23.0102683,
+      "phase": "fault",
+      "lag_ms": 4070,
+      "heartbeat_age_ms": 958,
+      "decision": "GO"
+    },
+    {
+      "t_s": 24.0106742,
+      "phase": "fault",
+      "lag_ms": 3052,
+      "heartbeat_age_ms": 838,
+      "decision": "GO"
+    },
+    {
+      "t_s": 25.0107258,
+      "phase": "fault",
+      "lag_ms": 4067,
+      "heartbeat_age_ms": 723,
+      "decision": "GO"
+    },
+    {
+      "t_s": 26.0110642,
+      "phase": "fault",
+      "lag_ms": 3054,
+      "heartbeat_age_ms": 604,
+      "decision": "GO"
+    },
+    {
+      "t_s": 27.0107849,
+      "phase": "fault",
+      "lag_ms": 4069,
+      "heartbeat_age_ms": 489,
+      "decision": "GO"
+    },
+    {
+      "t_s": 28.010468,
+      "phase": "fault",
+      "lag_ms": 4068,
+      "heartbeat_age_ms": 370,
+      "decision": "GO"
+    },
+    {
+      "t_s": 29.0095602,
+      "phase": "fault",
+      "lag_ms": 5083,
+      "heartbeat_age_ms": 254,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 30.0118624,
+      "phase": "recovery",
+      "lag_ms": 4066,
+      "heartbeat_age_ms": 137,
+      "decision": "GO"
+    },
+    {
+      "t_s": 31.0112813,
+      "phase": "recovery",
+      "lag_ms": 1014,
+      "heartbeat_age_ms": 22,
+      "decision": "GO"
+    },
+    {
+      "t_s": 32.01221,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 922,
+      "decision": "GO"
+    },
+    {
+      "t_s": 33.0111317,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 804,
+      "decision": "GO"
+    },
+    {
+      "t_s": 34.0121801,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 689,
+      "decision": "GO"
+    },
+    {
+      "t_s": 35.0101117,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 569,
+      "decision": "GO"
+    },
+    {
+      "t_s": 36.0103471,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 454,
+      "decision": "GO"
+    },
+    {
+      "t_s": 37.0099027,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 3689,
+      "decision": "GO"
+    },
+    {
+      "t_s": 38.0110395,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 728,
+      "decision": "GO"
+    },
+    {
+      "t_s": 39.0123748,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 610,
+      "decision": "GO"
+    },
+    {
+      "t_s": 40.0108399,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 492,
+      "decision": "GO"
+    },
+    {
+      "t_s": 41.0100482,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 371,
+      "decision": "GO"
+    },
+    {
+      "t_s": 42.012576,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 257,
+      "decision": "GO"
+    },
+    {
+      "t_s": 43.0111358,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 137,
+      "decision": "GO"
+    },
+    {
+      "t_s": 44.0105968,
+      "phase": "recovery",
+      "lag_ms": 1014,
+      "heartbeat_age_ms": 23,
+      "decision": "GO"
+    },
+    {
+      "t_s": 45.0113421,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 923,
+      "decision": "GO"
+    },
+    {
+      "t_s": 46.0112614,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 803,
+      "decision": "GO"
+    },
+    {
+      "t_s": 47.0113975,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 686,
+      "decision": "GO"
+    },
+    {
+      "t_s": 48.0101644,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 564,
+      "decision": "GO"
+    }
+  ]
+}

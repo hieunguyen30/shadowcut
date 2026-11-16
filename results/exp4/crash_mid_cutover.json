@@ -1,0 +1,31 @@
+{
+  "scenario": "crash_mid_cutover",
+  "env": "local Docker: PostgreSQL 16 vs Cloud Spanner emulator + PGAdapter (EMULATOR, not real Spanner)",
+  "start": "2026-11-16T09:51:39.1286857Z",
+  "steps": [
+    "   3.2s cutover (crash injected after freeze)",
+    "   3.2s crashed; control state = frozen/frozen",
+    "   6.2s cutover resumed",
+    "   9.4s cutover complete; state = spanner/cutover_done",
+    "   9.5s applier paused (emulator single-RW-transaction workaround)",
+    "  39.6s rollback (crash injected after freeze)",
+    "  39.6s crashed; control state = frozen/rollback_frozen",
+    "  42.6s rollback complete; 20 journal entries replayed",
+    "  45.8s verified: acked=64 lost=0 missing_in_spanner=0 dupes=0"
+  ],
+  "acked_writes": 64,
+  "rejected_while_frozen": 123,
+  "other_errors": 0,
+  "acked_by_mode": {
+    "postgres": 54,
+    "spanner": 10
+  },
+  "lost_in_postgres": 0,
+  "missing_in_spanner_after_cdc": 0,
+  "duplicate_rows": 0,
+  "freeze_seconds": {
+    "cutover": 6.238752,
+    "rollback": 2.9860227999999998
+  },
+  "journal_entries_replayed": 20
+}

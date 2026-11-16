@@ -1,0 +1,410 @@
+{
+  "scenario": "kill_applier",
+  "desc": "docker kill the applier mid-stream, restart after the fault window",
+  "env": "local Docker: PostgreSQL 16 vs Cloud Spanner emulator + PGAdapter (EMULATOR, not real Spanner)",
+  "start": "2026-11-16T09:46:17.8989567Z",
+  "fault_seconds": 20,
+  "acked_writes": 2250,
+  "failed_writes": 0,
+  "rows_in_spanner": 2250,
+  "lost": 0,
+  "extra": 0,
+  "value_mismatch": 0,
+  "duplicate_deliveries_kafka": 0,
+  "duplicate_effects": 0,
+  "recovery_seconds": 1.4449942,
+  "drain_after_writer_stop_seconds": 0.06296550000000067,
+  "expect_nogo": true,
+  "nogo_during_fault": true,
+  "go_after_recovery": true,
+  "gate_correct": true,
+  "false_go_samples": 0,
+  "false_nogo_samples": 1,
+  "max_lag_ms": 22183,
+  "timeline": [
+    {
+      "t_s": 1.1295249,
+      "truth_rows_behind": 20,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 354,
+      "decision": "GO"
+    },
+    {
+      "t_s": 2.1252806,
+      "truth_rows_behind": 14,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 226,
+      "decision": "GO"
+    },
+    {
+      "t_s": 3.1345324,
+      "truth_rows_behind": 36,
+      "phase": "pre",
+      "lag_ms": 1017,
+      "heartbeat_age_ms": 109,
+      "decision": "GO"
+    },
+    {
+      "t_s": 4.1299195,
+      "truth_rows_behind": 29,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 1009,
+      "decision": "GO"
+    },
+    {
+      "t_s": 5.130596,
+      "truth_rows_behind": 22,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 887,
+      "decision": "GO"
+    },
+    {
+      "t_s": 6.1256615,
+      "truth_rows_behind": 15,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 766,
+      "decision": "GO"
+    },
+    {
+      "t_s": 7.1256336000000005,
+      "truth_rows_behind": 9,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 642,
+      "decision": "GO"
+    },
+    {
+      "t_s": 8.1337341,
+      "truth_rows_behind": 30,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 527,
+      "decision": "GO"
+    },
+    {
+      "t_s": 9.1231377,
+      "truth_rows_behind": 24,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 406,
+      "decision": "GO"
+    },
+    {
+      "t_s": 10.1451666,
+      "truth_rows_behind": 17,
+      "phase": "pre",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 289,
+      "decision": "GO"
+    },
+    {
+      "t_s": 11.1725855,
+      "truth_rows_behind": 68,
+      "phase": "fault",
+      "lag_ms": 1134,
+      "heartbeat_age_ms": 169,
+      "decision": "GO"
+    },
+    {
+      "t_s": 12.134861,
+      "truth_rows_behind": 118,
+      "phase": "fault",
+      "lag_ms": 2123,
+      "heartbeat_age_ms": 48,
+      "decision": "GO"
+    },
+    {
+      "t_s": 13.1551103,
+      "truth_rows_behind": 168,
+      "phase": "fault",
+      "lag_ms": 3132,
+      "heartbeat_age_ms": 948,
+      "decision": "GO"
+    },
+    {
+      "t_s": 14.1427017,
+      "truth_rows_behind": 218,
+      "phase": "fault",
+      "lag_ms": 4124,
+      "heartbeat_age_ms": 831,
+      "decision": "GO"
+    },
+    {
+      "t_s": 15.1303745,
+      "truth_rows_behind": 267,
+      "phase": "fault",
+      "lag_ms": 5121,
+      "heartbeat_age_ms": 712,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 16.1433784,
+      "truth_rows_behind": 318,
+      "phase": "fault",
+      "lag_ms": 6122,
+      "heartbeat_age_ms": 588,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 17.14049,
+      "truth_rows_behind": 368,
+      "phase": "fault",
+      "lag_ms": 7126,
+      "heartbeat_age_ms": 3796,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 18.148716,
+      "truth_rows_behind": 418,
+      "phase": "fault",
+      "lag_ms": 9959,
+      "heartbeat_age_ms": 857,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 19.1347883,
+      "truth_rows_behind": 468,
+      "phase": "fault",
+      "lag_ms": 10977,
+      "heartbeat_age_ms": 739,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 20.1299138,
+      "truth_rows_behind": 517,
+      "phase": "fault",
+      "lag_ms": 11997,
+      "heartbeat_age_ms": 619,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 21.1350643,
+      "truth_rows_behind": 567,
+      "phase": "fault",
+      "lag_ms": 13020,
+      "heartbeat_age_ms": 496,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 22.1408659,
+      "truth_rows_behind": 618,
+      "phase": "fault",
+      "lag_ms": 14037,
+      "heartbeat_age_ms": 378,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 23.1446211,
+      "truth_rows_behind": 668,
+      "phase": "fault",
+      "lag_ms": 15056,
+      "heartbeat_age_ms": 260,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 24.1385268,
+      "truth_rows_behind": 718,
+      "phase": "fault",
+      "lag_ms": 16077,
+      "heartbeat_age_ms": 139,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 25.1457676,
+      "truth_rows_behind": 768,
+      "phase": "fault",
+      "lag_ms": 17094,
+      "heartbeat_age_ms": 22,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 26.1291722,
+      "truth_rows_behind": 817,
+      "phase": "fault",
+      "lag_ms": 17094,
+      "heartbeat_age_ms": 922,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 27.13384,
+      "truth_rows_behind": 868,
+      "phase": "fault",
+      "lag_ms": 18113,
+      "heartbeat_age_ms": 803,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 28.1404699,
+      "truth_rows_behind": 918,
+      "phase": "fault",
+      "lag_ms": 19129,
+      "heartbeat_age_ms": 686,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 29.1463869,
+      "truth_rows_behind": 968,
+      "phase": "fault",
+      "lag_ms": 20147,
+      "heartbeat_age_ms": 568,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 30.1365991,
+      "truth_rows_behind": 1018,
+      "phase": "fault",
+      "lag_ms": 21164,
+      "heartbeat_age_ms": 451,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 31.2521314,
+      "truth_rows_behind": 52,
+      "phase": "recovery",
+      "lag_ms": 22183,
+      "heartbeat_age_ms": 333,
+      "decision": "NO-GO"
+    },
+    {
+      "t_s": 32.1505521,
+      "truth_rows_behind": 14,
+      "phase": "recovery",
+      "lag_ms": 1023,
+      "heartbeat_age_ms": 209,
+      "decision": "GO"
+    },
+    {
+      "t_s": 33.1330408,
+      "truth_rows_behind": 35,
+      "phase": "recovery",
+      "lag_ms": 1016,
+      "heartbeat_age_ms": 92,
+      "decision": "GO"
+    },
+    {
+      "t_s": 34.1390814,
+      "truth_rows_behind": 29,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 992,
+      "decision": "GO"
+    },
+    {
+      "t_s": 35.1362927,
+      "truth_rows_behind": 22,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 873,
+      "decision": "GO"
+    },
+    {
+      "t_s": 36.1280424,
+      "truth_rows_behind": 15,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 756,
+      "decision": "GO"
+    },
+    {
+      "t_s": 37.1313517,
+      "truth_rows_behind": 37,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 637,
+      "decision": "GO"
+    },
+    {
+      "t_s": 38.1295259,
+      "truth_rows_behind": 30,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 517,
+      "decision": "GO"
+    },
+    {
+      "t_s": 39.138136,
+      "truth_rows_behind": 24,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 399,
+      "decision": "GO"
+    },
+    {
+      "t_s": 40.1248377,
+      "truth_rows_behind": 17,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 278,
+      "decision": "GO"
+    },
+    {
+      "t_s": 41.13363,
+      "truth_rows_behind": 10,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 157,
+      "decision": "GO"
+    },
+    {
+      "t_s": 42.121829,
+      "truth_rows_behind": 32,
+      "phase": "recovery",
+      "lag_ms": 1015,
+      "heartbeat_age_ms": 41,
+      "decision": "GO"
+    },
+    {
+      "t_s": 43.1243262,
+      "truth_rows_behind": 25,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 941,
+      "decision": "GO"
+    },
+    {
+      "t_s": 44.1421318,
+      "truth_rows_behind": 19,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 820,
+      "decision": "GO"
+    },
+    {
+      "t_s": 45.1616664,
+      "truth_rows_behind": 11,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 702,
+      "decision": "GO"
+    },
+    {
+      "t_s": 46.121239,
+      "truth_rows_behind": 0,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 585,
+      "decision": "GO"
+    },
+    {
+      "t_s": 47.1223434,
+      "truth_rows_behind": 0,
+      "phase": "recovery",
+      "lag_ms": 0,
+      "heartbeat_age_ms": 468,
+      "decision": "GO"
+    },
+    {
+      "t_s": 48.1171487,
+      "truth_rows_behind": 0,
+      "phase": "recovery",
+      "lag_ms": 1016,
+      "heartbeat_age_ms": 352,
+      "decision": "GO"
+    }
+  ]
+}
