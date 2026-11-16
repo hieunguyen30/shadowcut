@@ -28,6 +28,7 @@ func main() {
 	guard := flag.Bool("guard", true, "exactly-once offset guard (disable only for fault experiments)")
 	audit := flag.Bool("audit", pgutil.Env("APPLIER_AUDIT", "") == "1", "record per-record apply counts in sc_apply_audit")
 	group := flag.String("group", pgutil.Env("APPLIER_GROUP", "sc-applier"), "Kafka consumer group")
+	instance := flag.String("instance-id", pgutil.Env("APPLIER_INSTANCE_ID", "sc-applier-1"), "static group membership id (unique per applier replica)")
 	topics := flag.String("topics", `^sc\.public\..*`, "topic regex")
 	batch := flag.Int("batch", 500, "max records per Spanner transaction")
 	flag.Parse()
@@ -67,6 +68,9 @@ func main() {
 	kc, err := kgo.NewClient(
 		kgo.SeedBrokers(brokers...),
 		kgo.ConsumerGroup(*group),
+		// Static membership: a restarted applier reclaims its partitions without
+		// waiting for the session timeout of its previous incarnation.
+		kgo.InstanceID(*instance),
 		kgo.ConsumeRegex(),
 		kgo.ConsumeTopics(*topics),
 		kgo.DisableAutoCommit(),

@@ -1,0 +1,7 @@
+apiVersion: 1
+providers:
+  - name: shadowcut
+    folder: Shadowcut
+    type: file
+    options:
+      path: /var/lib/grafana/dashboards

@@ -1,0 +1,364 @@
+{
+  "panels": [
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      },
+      "id": 1,
+      "targets": [
+        {
+          "expr": "max(shadowcut_replication_lag_seconds)",
+          "legendFormat": "lag",
+          "refId": "A"
+        }
+      ],
+      "title": "Replication lag (applier)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      },
+      "id": 2,
+      "targets": [
+        {
+          "expr": "sum(rate(shadowcut_applier_records_applied_total[1m]))",
+          "legendFormat": "applied/s",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(shadowcut_applier_records_skipped_total[1m]))",
+          "legendFormat": "dedup-skipped/s",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(shadowcut_applier_errors_total[1m]))",
+          "legendFormat": "errors/s",
+          "refId": "C"
+        }
+      ],
+      "title": "CDC records applied / skipped by offset guard",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 8
+      },
+      "id": 3,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(shadowcut_applier_batch_seconds_bucket[5m])))",
+          "legendFormat": "p95",
+          "refId": "A"
+        }
+      ],
+      "title": "Applier batch latency p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 8
+      },
+      "id": 4,
+      "targets": [
+        {
+          "expr": "sum(rate(shadowcut_shadow_compared_total[1m]))",
+          "legendFormat": "compared/s",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(shadowcut_shadow_mismatches_total[1m]))",
+          "legendFormat": "mismatched/s",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(rate(shadowcut_shadow_dropped_total[1m]))",
+          "legendFormat": "dropped/s",
+          "refId": "C"
+        }
+      ],
+      "title": "Shadow reads compared / mismatched",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "id": 5,
+      "targets": [
+        {
+          "expr": "sum by (category) (increase(shadowcut_shadow_mismatches_total[15m]))",
+          "legendFormat": "{{category}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Mismatches by root cause",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "id": 6,
+      "targets": [
+        {
+          "expr": "topk(10, sum by (query) (increase(shadowcut_shadow_mismatches_total[15m])))",
+          "legendFormat": "{{query}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Mismatches by query",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 24
+      },
+      "id": 7,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le) (rate(shadowcut_shadow_query_seconds_bucket[5m])))",
+          "legendFormat": "p95",
+          "refId": "A"
+        }
+      ],
+      "title": "Spanner shadow query latency p95",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 24
+      },
+      "id": 8,
+      "targets": [
+        {
+          "expr": "sum by (side) (rate(shadowcut_verify_rows_read_total[5m]))",
+          "legendFormat": "rows/s {{side}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(increase(shadowcut_verify_drift_total[15m]))",
+          "legendFormat": "drift (15m)",
+          "refId": "B"
+        }
+      ],
+      "title": "Verifier: rows read / drift",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 32
+      },
+      "id": 9,
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum by (le, mode) (rate(shadowcut_app_request_seconds_bucket[5m])))",
+          "legendFormat": "{{mode}}",
+          "refId": "A"
+        }
+      ],
+      "title": "Demo app latency p95 by mode",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 32
+      },
+      "id": 10,
+      "targets": [
+        {
+          "expr": "sum by (status, mode) (rate(shadowcut_app_requests_total[1m]))",
+          "legendFormat": "{{mode}} {{status}}",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(shadowcut_app_txn_retries_total[1m]))",
+          "legendFormat": "txn retries/s",
+          "refId": "B"
+        }
+      ],
+      "title": "Demo app requests by status",
+      "type": "timeseries"
+    },
+    {
+      "datasource": {
+        "type": "prometheus",
+        "uid": "prom"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ops"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 11,
+      "targets": [
+        {
+          "expr": "sum(rate(shadowcut_ingest_events_total[1m]))",
+          "legendFormat": "events/s",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(shadowcut_ingest_rows_written_total[1m]))",
+          "legendFormat": "rows/s",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(increase(shadowcut_ingest_reconnects_total[15m]))",
+          "legendFormat": "reconnects (15m)",
+          "refId": "C"
+        }
+      ],
+      "title": "Ingest: events received / rows written",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 39,
+  "tags": [
+    "shadowcut"
+  ],
+  "time": {
+    "from": "now-30m",
+    "to": "now"
+  },
+  "title": "Shadowcut",
+  "uid": "shadowcut",
+  "version": 1
+}

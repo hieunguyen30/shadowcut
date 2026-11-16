@@ -52,6 +52,10 @@ type Server struct {
 	reqs    metric.Int64Counter
 	latency metric.Float64Histogram
 	retries metric.Int64Counter
+	// RetryCount counts transaction retries (aborts / serialization failures).
+	RetryCount atomic.Int64
+	// NoRetry disables the retry loop (isolation experiment baseline).
+	NoRetry bool
 }
 
 // New builds a server. Read may be nil (reads go to PG).
@@ -416,10 +420,11 @@ func (s *Server) retryTx(ctx context.Context, pool *pgxpool.Pool, fn func(pgx.Tx
 	var err error
 	for attempt := 0; attempt < 8; attempt++ {
 		err = pgx.BeginFunc(ctx, pool, fn)
-		if err == nil || !IsRetryable(err) {
+		if err == nil || !IsRetryable(err) || s.NoRetry {
 			return err
 		}
 		s.retries.Add(ctx, 1)
+		s.RetryCount.Add(1)
 		time.Sleep(time.Duration(attempt+1) * 20 * time.Millisecond)
 	}
 	return err

@@ -24,7 +24,7 @@ var envLabel = "local Docker: PostgreSQL 16 vs Cloud Spanner emulator + PGAdapte
 func main() {
 	slog.SetDefault(slog.New(slog.NewTextHandler(os.Stderr, nil)))
 	root := &cobra.Command{Use: "sc-exp", Short: "Shadowcut experiments", SilenceUsage: true}
-	root.AddCommand(probeCmd(), exp1Cmd(), exp2Cmd(), exp4Cmd(), exp5Cmd(), isolationCmd())
+	root.AddCommand(probeCmd(), exp1Cmd(), exp2Cmd(), exp3Cmd(), exp4Cmd(), exp5Cmd(), isolationCmd())
 	if err := root.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, "error:", err)
 		os.Exit(1)

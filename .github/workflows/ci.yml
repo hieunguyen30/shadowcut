@@ -1,0 +1,71 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: gofmt
+        run: test -z "$(gofmt -l . | tee /dev/stderr)"
+      - name: go vet
+        run: go vet ./... && go vet -tags integration ./...
+      - uses: golangci/golangci-lint-action@v6
+        with:
+          version: latest
+          args: --timeout 5m
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: unit + property tests
+        run: go test -short -race -count=1 ./...
+      - name: hazard catalog docs in sync
+        run: |
+          go run ./cmd/shadowcut report catalog --out /tmp/HAZARDS.md
+          diff -u docs/HAZARDS.md /tmp/HAZARDS.md
+      - name: scanner smoke test on the demo app
+        run: go run ./cmd/shadowcut scan --json /tmp/scan.json --min-severity high
+
+  integration:
+    # Proxy and verifier against PostgreSQL 16 and the Spanner emulator via PGAdapter.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: wiki
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U test" --health-interval 2s --health-retries 30
+      spanner:
+        image: gcr.io/cloud-spanner-pg-adapter/pgadapter-emulator:latest
+        ports: ["5433:5432", "9010:9010"]
+    env:
+      SC_TEST_PG_DSN: postgres://test:test@localhost:5432/wiki?sslmode=disable
+      SC_TEST_SPANNER_DSN: postgres://localhost:5433/wiki?sslmode=disable
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: wait for PGAdapter
+        run: for i in $(seq 1 60); do pg_isready -h localhost -p 5433 && break; sleep 2; done
+      - name: integration tests (emulator)
+        run: go test -count=1 -run 'Integration' ./internal/...

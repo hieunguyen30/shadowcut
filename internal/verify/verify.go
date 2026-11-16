@@ -352,25 +352,17 @@ func collect(rows pgx.Rows, npk int) ([]keyed, error) {
 // interface, see docs/HAZARDS.md).
 func (v *Verifier) fetch(ctx context.Context, q Querier, t Table, keys []keyed) (map[string]keyed, error) {
 	out := map[string]keyed{}
-	// Spanner limits a statement to 1000 functions; each key costs one "=" per PK
-	// column plus one AND/OR per column (see docs/BUGS.md BUG-001).
-	chunk := 900 / (2 * len(t.PK))
+	chunk := ChunkSize(len(t.PK))
 	for i := 0; i < len(keys); i += chunk {
 		end := i + chunk
 		if end > len(keys) {
 			end = len(keys)
 		}
-		var preds []string
 		var args []any
 		for _, k := range keys[i:end] {
-			var parts []string
-			for j, c := range t.PK {
-				args = append(args, k.pk[j])
-				parts = append(parts, fmt.Sprintf("%s = $%d", quoteIdent(c), len(args)))
-			}
-			preds = append(preds, "("+strings.Join(parts, " AND ")+")")
+			args = append(args, k.pk[:len(t.PK)]...)
 		}
-		sql := fmt.Sprintf(`SELECT %s FROM %s WHERE %s`, colList(t), quoteIdent(t.Name), strings.Join(preds, " OR "))
+		sql := fmt.Sprintf(`SELECT %s FROM %s WHERE %s`, colList(t), quoteIdent(t.Name), KeyPredicate(t.PK, end-i))
 		rows, err := q.Query(ctx, sql, args...)
 		if err != nil {
 			return nil, shortErr(err)
@@ -397,4 +389,29 @@ func shortErr(err error) error {
 		msg = msg[:300] + "..."
 	}
 	return fmt.Errorf("%s", msg)
+}
+
+// ChunkSize is the number of keys per lookup statement. Spanner limits a
+// statement to 1000 functions; each key costs one "=" per PK column plus one
+// AND/OR per column (docs/BUGS.md BUG-001).
+func ChunkSize(pkCols int) int {
+	if pkCols < 1 {
+		pkCols = 1
+	}
+	return 900 / (2 * pkCols)
+}
+
+// KeyPredicate renders the OR-of-AND lookup predicate for n keys.
+func KeyPredicate(pk []string, n int) string {
+	var preds []string
+	arg := 0
+	for k := 0; k < n; k++ {
+		var parts []string
+		for _, c := range pk {
+			arg++
+			parts = append(parts, fmt.Sprintf("%s = $%d", quoteIdent(c), arg))
+		}
+		preds = append(preds, "("+strings.Join(parts, " AND ")+")")
+	}
+	return strings.Join(preds, " OR ")
 }

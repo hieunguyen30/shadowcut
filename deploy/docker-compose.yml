@@ -94,6 +94,7 @@ services:
     environment:
       KAFKA_BROKERS: toxiproxy:29093
       SPANNER_EMULATOR_HOST: toxiproxy:29010
+      APPLIER_AUDIT: ${APPLIER_AUDIT:-0}
       METRICS_ADDR: ":9464"
     depends_on: [kafka, spanner, toxiproxy]
     profiles: ["cdc", "full"]

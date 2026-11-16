@@ -1,0 +1,11 @@
+global:
+  scrape_interval: 5s
+scrape_configs:
+  # services running inside the compose network
+  - job_name: shadowcut-docker
+    static_configs:
+      - targets: ["applier:9464", "shadow:9464", "demoapp:9464", "ingest-wiki:9464"]
+  # services started on the host (see scripts/run-host.sh): 1946x ports
+  - job_name: shadowcut-host
+    static_configs:
+      - targets: ["host.docker.internal:19464", "host.docker.internal:19465", "host.docker.internal:19466", "host.docker.internal:19467", "host.docker.internal:19468"]

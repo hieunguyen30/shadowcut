@@ -9,6 +9,7 @@ import (
 	"io"
 	"log/slog"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -46,6 +47,14 @@ func (p *Proxy) Serve(ctx context.Context) error {
 	ln, err := net.Listen("tcp", p.Listen)
 	if err != nil {
 		return err
+	}
+	return p.ServeListener(ctx, ln)
+}
+
+// ServeListener serves on an existing listener (tests use 127.0.0.1:0).
+func (p *Proxy) ServeListener(ctx context.Context, ln net.Listener) error {
+	if p.MaxRows <= 0 {
+		p.MaxRows = 10000
 	}
 	go func() { <-ctx.Done(); ln.Close() }()
 	slog.Info("shadow proxy listening", "listen", p.Listen, "upstream", p.Upstream)
@@ -105,7 +114,11 @@ func (p *Proxy) handle(ctx context.Context, client net.Conn) {
 		startup = msg
 		break
 	}
-	up, err := net.DialTimeout("tcp", p.Upstream, 10*time.Second)
+	network := "tcp"
+	if strings.HasPrefix(p.Upstream, "/") {
+		network = "unix" // e.g. a Cloud SQL connector socket
+	}
+	up, err := net.DialTimeout(network, p.Upstream, 10*time.Second)
 	if err != nil {
 		slog.Warn("proxy: upstream dial failed", "err", err)
 		return

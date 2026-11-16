@@ -1,0 +1,8 @@
+.git
+bin
+state
+results
+data
+tmp
+*.exe
+.env
