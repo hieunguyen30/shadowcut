@@ -1,0 +1,5 @@
+[
+  {"name": "kafka_applier",   "listen": "0.0.0.0:29093", "upstream": "kafka:9093",   "enabled": true},
+  {"name": "spanner_applier", "listen": "0.0.0.0:29010", "upstream": "spanner:9010", "enabled": true},
+  {"name": "spanner_pg",      "listen": "0.0.0.0:25433", "upstream": "spanner:5432", "enabled": true}
+]

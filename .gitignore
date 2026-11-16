@@ -1,0 +1,11 @@
+.env
+*.exe
+/bin/
+/state/
+/tmp/
+results/logs/*.log
+!results/logs/.keep
+.terraform/
+*.tfstate*
+*.tfvars
+!terraform/*.tfvars.example
