@@ -119,12 +119,14 @@ ORDER BY created_at DESC, id DESC
 LIMIT 20;
 
 -- name: insert_edit
+-- txn: create_edit
 -- route: POST /api/edits
 INSERT INTO edits (event_id, wiki, page_title, namespace, user_name, is_bot, is_minor, change_type, comment, old_len, new_len, size_delta, growth_ratio, rev_new, edit_ts)
 VALUES ($1, $2, $3, 0, $4, false, false, 'edit', $5, $6, $7, $8, $9, NULL, $10)
 RETURNING id;
 
 -- name: upsert_page
+-- txn: create_edit
 -- route: POST /api/edits
 INSERT INTO pages AS p (wiki, title, edit_count, bytes, avg_delta, last_editor, last_edit_ts)
 VALUES ($1, $2, 1, $3, $4, $5, $6)
@@ -137,9 +139,11 @@ ON CONFLICT (wiki, title) DO UPDATE SET
 RETURNING wiki, title, edit_count, bytes, avg_delta, last_editor, last_edit_ts;
 
 -- name: touch_page_read
+-- txn: touch_page
 -- route: POST /api/pages/{wiki}/{title}/touch  (read-modify-write in one transaction)
 SELECT edit_count FROM pages WHERE wiki = $1 AND title = $2;
 
 -- name: touch_page_write
+-- txn: touch_page
 -- route: POST /api/pages/{wiki}/{title}/touch
 UPDATE pages SET edit_count = $3, last_edit_ts = now() WHERE wiki = $1 AND title = $2;
