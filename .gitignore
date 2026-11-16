@@ -9,3 +9,5 @@ results/logs/*.log
 *.tfstate*
 *.tfvars
 !terraform/*.tfvars.example
+state/
+data/*.jsonl
