@@ -76,6 +76,9 @@ services:
       VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
       CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      # Debezium confirms the replication-slot LSN only when Connect flushes
+      # offsets (default every 60s), which made cutover drains take ~70s (BUG-003).
+      OFFSET_FLUSH_INTERVAL_MS: "2000"
     ports: ["18083:8083"]
 
   toxiproxy:

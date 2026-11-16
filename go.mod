@@ -55,6 +55,7 @@ require (
 	github.com/prometheus/procfs v0.22.0 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.7.0 // indirect
+	github.com/twmb/franz-go/pkg/kadm v1.20.0 // indirect
 	github.com/twmb/franz-go/pkg/kmsg v1.15.1 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect

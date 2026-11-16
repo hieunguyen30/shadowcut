@@ -23,7 +23,7 @@ type Category string
 const (
 	Collation      Category = "collation"
 	NullOrdering   Category = "null_ordering"
-	NullSemantics  Category = "null_semantics" // e.g. concat() returns NULL on Spanner
+	NullSemantics  Category = "null_semantics"     // e.g. concat() returns NULL on Spanner
 	FuncSemantics  Category = "function_semantics" // a function returns a different value (e.g. Unicode upper())
 	Precision      Category = "precision"
 	Timezone       Category = "timezone"

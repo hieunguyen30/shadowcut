@@ -46,23 +46,23 @@ type Config struct {
 
 // Drift is one confirmed difference.
 type Drift struct {
-	Table   string   `json:"table"`
-	Key     string   `json:"key"`
-	Kind    string   `json:"kind"` // missing_in_spanner | extra_in_spanner | value_diff
-	Columns []string `json:"columns,omitempty"`
+	Table   string    `json:"table"`
+	Key     string    `json:"key"`
+	Kind    string    `json:"kind"` // missing_in_spanner | extra_in_spanner | value_diff
+	Columns []string  `json:"columns,omitempty"`
 	Found   time.Time `json:"found"`
 }
 
 // TableStats is per-table round accounting.
 type TableStats struct {
-	Table        string `json:"table"`
-	SampledPG    int    `json:"sampled_pg"`
-	SampledSP    int    `json:"sampled_spanner"`
-	RowsReadPG   int    `json:"rows_read_pg"`
-	RowsReadSP   int    `json:"rows_read_spanner"`
-	Suspects     int    `json:"suspects"`
-	InFlight     int    `json:"in_flight"`
-	Confirmed    int    `json:"confirmed"`
+	Table      string `json:"table"`
+	SampledPG  int    `json:"sampled_pg"`
+	SampledSP  int    `json:"sampled_spanner"`
+	RowsReadPG int    `json:"rows_read_pg"`
+	RowsReadSP int    `json:"rows_read_spanner"`
+	Suspects   int    `json:"suspects"`
+	InFlight   int    `json:"in_flight"`
+	Confirmed  int    `json:"confirmed"`
 }
 
 // Round is the result of one verification round.
@@ -158,9 +158,9 @@ func contains(xs []string, s string) bool {
 }
 
 type keyed struct {
-	key  string
-	pk   []any
-	row  rowset.Row
+	key string
+	pk  []any
+	row rowset.Row
 }
 
 // RunRound performs one verification round.

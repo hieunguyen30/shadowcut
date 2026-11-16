@@ -73,7 +73,7 @@ type Config struct {
 	RecheckAfter time.Duration // replication-lag bound; 0 disables rechecks
 	Workers      int
 	QueueSize    int
-	OutDir       string // mismatches.jsonl + shadow-summary.json; "" = no files
+	OutDir       string            // mismatches.jsonl + shadow-summary.json; "" = no files
 	Names        map[string]string // fingerprint -> query name (from annotated SQL files)
 	// ShadowTimeout bounds each Spanner execution.
 	ShadowTimeout time.Duration
@@ -394,13 +394,13 @@ func ErrText(err error) string {
 
 // QueryStats aggregates outcomes per statement fingerprint.
 type QueryStats struct {
-	Name        string                    `json:"name,omitempty"`
-	Fingerprint string                    `json:"fingerprint"`
-	Example     string                    `json:"example"`
-	Compared    int64                     `json:"compared"`
-	Mismatches  int64                     `json:"mismatches"`
+	Name        string                      `json:"name,omitempty"`
+	Fingerprint string                      `json:"fingerprint"`
+	Example     string                      `json:"example"`
+	Compared    int64                       `json:"compared"`
+	Mismatches  int64                       `json:"mismatches"`
 	ByCategory  map[classify.Category]int64 `json:"by_category,omitempty"`
-	LastReason  string                    `json:"last_reason,omitempty"`
+	LastReason  string                      `json:"last_reason,omitempty"`
 }
 
 // Summary is the shadow layer's persisted state, read by `shadowcut gate`.
@@ -475,7 +475,10 @@ func NamesFromSQL(srcs ...string) map[string]string {
 	for _, src := range srcs {
 		for _, st := range sqlscan.Split(src) {
 			if st.Name != "" {
-				m[sqlscan.Fingerprint(st.Tokens)] = st.Name
+				fp := sqlscan.Fingerprint(st.Tokens)
+				if _, taken := m[fp]; !taken { // first source wins (app before curated set)
+					m[fp] = st.Name
+				}
 			}
 		}
 	}

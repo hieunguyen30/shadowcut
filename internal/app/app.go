@@ -23,6 +23,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/metric"
@@ -343,8 +344,11 @@ VALUES (nextval('edits_id_seq'), $1, $2, $3, 0, $4, false, false, 'edit', $5, $6
 RETURNING id`
 
 // Journal records a full row image in the reverse journal (same transaction).
+// Values are stored as JSON strings: bit-reversed ids (~4.6e18) and numerics
+// would lose precision as JSON numbers; jsonb_populate_record casts the text
+// back to each column type exactly during rollback.
 func Journal(ctx context.Context, tx pgx.Tx, table string, row map[string]any) error {
-	b, err := json.Marshal(row)
+	b, err := json.Marshal(TextRow(row))
 	if err != nil {
 		return err
 	}
@@ -435,4 +439,62 @@ func writeJSON(w http.ResponseWriter, code int, v any) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
 	_ = json.NewEncoder(w).Encode(v)
+}
+
+// TextRow renders a row image with text values (NULLs and booleans preserved).
+func TextRow(row map[string]any) map[string]any {
+	out := make(map[string]any, len(row))
+	for k, v := range row {
+		out[k] = textValue(v)
+	}
+	return out
+}
+
+func textValue(v any) any {
+	switch x := v.(type) {
+	case nil:
+		return nil
+	case bool:
+		return x
+	case *string:
+		if x == nil {
+			return nil
+		}
+		return *x
+	case *int64:
+		if x == nil {
+			return nil
+		}
+		return strconv.FormatInt(*x, 10)
+	case *float64:
+		if x == nil {
+			return nil
+		}
+		return strconv.FormatFloat(*x, 'g', -1, 64)
+	case int:
+		return strconv.Itoa(x)
+	case int64:
+		return strconv.FormatInt(x, 10)
+	case int32:
+		return strconv.FormatInt(int64(x), 10)
+	case float64:
+		return strconv.FormatFloat(x, 'g', -1, 64)
+	case time.Time:
+		return x.UTC().Format(time.RFC3339Nano)
+	case string:
+		return x
+	case pgtype.Numeric:
+		if !x.Valid {
+			return nil
+		}
+		dv, err := x.Value()
+		if err != nil || dv == nil {
+			return nil
+		}
+		return fmt.Sprint(dv)
+	case Mode:
+		return string(x)
+	default:
+		return fmt.Sprint(x)
+	}
 }

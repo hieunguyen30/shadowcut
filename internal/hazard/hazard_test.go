@@ -38,9 +38,9 @@ func rules(fs []Finding) map[string]bool {
 
 func TestQueryRules(t *testing.T) {
 	cases := []struct {
-		sql      string
-		want     []string
-		wantNot  []string
+		sql     string
+		want    []string
+		wantNot []string
 	}{
 		{"SELECT title FROM pages WHERE wiki = $1 ORDER BY title LIMIT 10", []string{"Q-COLLATION-ORDER"}, []string{"Q-ORDER-TIES", "Q-NULL-ORDER"}},
 		{"SELECT lower(title) AS t FROM pages ORDER BY t", []string{"Q-COLLATION-ORDER"}, nil},

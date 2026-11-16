@@ -89,7 +89,9 @@ func (r *Report) WriteMarkdown(w io.Writer) {
 	for k := range r.ByRule {
 		rules = append(rules, k)
 	}
-	sort.Slice(rules, func(i, j int) bool { return RuleByID[rules[i]].Severity.Rank() > RuleByID[rules[j]].Severity.Rank() || (RuleByID[rules[i]].Severity == RuleByID[rules[j]].Severity && rules[i] < rules[j]) })
+	sort.Slice(rules, func(i, j int) bool {
+		return RuleByID[rules[i]].Severity.Rank() > RuleByID[rules[j]].Severity.Rank() || (RuleByID[rules[i]].Severity == RuleByID[rules[j]].Severity && rules[i] < rules[j])
+	})
 	fmt.Fprintf(w, "| rule | severity | findings | title |\n|---|---|---|---|\n")
 	for _, id := range rules {
 		fmt.Fprintf(w, "| [%s](../../docs/HAZARDS.md#%s) | %s | %d | %s |\n", id, strings.ToLower(id), RuleByID[id].Severity, r.ByRule[id], RuleByID[id].Title)

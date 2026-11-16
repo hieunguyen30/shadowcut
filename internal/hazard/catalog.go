@@ -50,7 +50,7 @@ type Rule struct {
 	ID       string            `json:"id"`
 	Title    string            `json:"title"`
 	Severity Severity          `json:"severity"`
-	Area     string            `json:"area"` // hotspot | collation | ordering | null | timezone | precision | isolation | unsupported | semantics | naming
+	Area     string            `json:"area"`               // hotspot | collation | ordering | null | timezone | precision | isolation | unsupported | semantics | naming
 	Predicts classify.Category `json:"predicts,omitempty"` // mismatch class Layer 2 should observe; "" = not observable by shadow reads
 	Explain  string            `json:"explain"`
 	Fix      string            `json:"fix"`

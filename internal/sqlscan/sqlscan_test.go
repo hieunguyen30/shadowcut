@@ -70,12 +70,12 @@ func TestAnalyzeOrderBy(t *testing.T) {
 
 func TestAnalyzeKinds(t *testing.T) {
 	cases := map[string]Kind{
-		"BEGIN":                                    KTxn,
+		"BEGIN": KTxn,
 		"SET TRANSACTION ISOLATION LEVEL READ COMMITTED": KTxn,
-		"WITH x AS (SELECT 1) UPDATE t SET a=1":    KUpdate,
-		"INSERT INTO t (a) VALUES (1)":             KInsert,
-		"CREATE INDEX i ON t (a)":                  KDDL,
-		"(SELECT 1) UNION (SELECT 2)":              KSelect,
+		"WITH x AS (SELECT 1) UPDATE t SET a=1":          KUpdate,
+		"INSERT INTO t (a) VALUES (1)":                   KInsert,
+		"CREATE INDEX i ON t (a)":                        KDDL,
+		"(SELECT 1) UNION (SELECT 2)":                    KSelect,
 	}
 	for sql, want := range cases {
 		if got := Analyze(Lex(sql)).Kind; got != want {

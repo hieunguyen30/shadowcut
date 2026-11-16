@@ -15,13 +15,13 @@ import (
 type TokKind int
 
 const (
-	TIdent    TokKind = iota // bare identifier or keyword (Text is lower-cased)
-	TQIdent                  // "quoted identifier" (Text is the unquoted, case-preserved name)
-	TString                  // string literal (Text is the literal body)
-	TNumber                  // numeric literal
-	TParam                   // $1, $2 ...
-	TOp                      // operator: = < > <= >= <> != || :: ~ etc.
-	TPunct                   // ( ) , ; . [ ]
+	TIdent  TokKind = iota // bare identifier or keyword (Text is lower-cased)
+	TQIdent                // "quoted identifier" (Text is the unquoted, case-preserved name)
+	TString                // string literal (Text is the literal body)
+	TNumber                // numeric literal
+	TParam                 // $1, $2 ...
+	TOp                    // operator: = < > <= >= <> != || :: ~ etc.
+	TPunct                 // ( ) , ; . [ ]
 )
 
 // Token is one lexical token with its source position (1-based line/col).
@@ -256,7 +256,7 @@ func isIdentPart(s string, i int) bool {
 type Statement struct {
 	Text   string
 	Tokens []Token
-	Line   int // 1-based line of the first token in the source file
+	Line   int               // 1-based line of the first token in the source file
 	Name   string            // from a "-- name: x" annotation, if any
 	Tags   map[string]string // other "-- key: value" annotations preceding the statement
 }
