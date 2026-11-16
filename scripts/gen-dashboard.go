@@ -40,10 +40,10 @@ func main() {
 		}
 		panels = append(panels, map[string]any{
 			"id": i + 1, "type": "timeseries", "title": d.title,
-			"datasource": map[string]string{"type": "prometheus", "uid": "prom"},
-			"gridPos":    map[string]int{"h": 8, "w": 12, "x": (i % 2) * 12, "y": (i / 2) * 8},
+			"datasource":  map[string]string{"type": "prometheus", "uid": "prom"},
+			"gridPos":     map[string]int{"h": 8, "w": 12, "x": (i % 2) * 12, "y": (i / 2) * 8},
 			"fieldConfig": map[string]any{"defaults": map[string]any{"unit": d.unit}, "overrides": []any{}},
-			"targets":    ts,
+			"targets":     ts,
 		})
 	}
 	dash := map[string]any{

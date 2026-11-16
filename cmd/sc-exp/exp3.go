@@ -27,19 +27,19 @@ import (
 // Only meaningful on REAL Spanner (the emulator has no splits or hotspots); the
 // local run is a functional smoke test of the harness.
 type exp3Result struct {
-	Strategy        string  `json:"strategy"`
-	Env             string  `json:"env"`
-	Writers         int     `json:"writers"`
-	Seconds         float64 `json:"seconds"`
-	Commits         int64   `json:"commits"`
-	Errors          int64   `json:"errors"`
-	Retries         int64   `json:"retries"`
-	CommitsPerSec   float64 `json:"commits_per_sec"`
-	P50Ms           float64 `json:"p50_ms"`
-	P95Ms           float64 `json:"p95_ms"`
-	P99Ms           float64 `json:"p99_ms"`
-	RecencyByIDOK   float64 `json:"recency_by_id_correct"` // share of ORDER BY id DESC LIMIT 20 that are truly the newest rows
-	ErrSample       string  `json:"error_sample,omitempty"`
+	Strategy      string  `json:"strategy"`
+	Env           string  `json:"env"`
+	Writers       int     `json:"writers"`
+	Seconds       float64 `json:"seconds"`
+	Commits       int64   `json:"commits"`
+	Errors        int64   `json:"errors"`
+	Retries       int64   `json:"retries"`
+	CommitsPerSec float64 `json:"commits_per_sec"`
+	P50Ms         float64 `json:"p50_ms"`
+	P95Ms         float64 `json:"p95_ms"`
+	P99Ms         float64 `json:"p99_ms"`
+	RecencyByIDOK float64 `json:"recency_by_id_correct"` // share of ORDER BY id DESC LIMIT 20 that are truly the newest rows
+	ErrSample     string  `json:"error_sample,omitempty"`
 }
 
 func exp3Cmd() *cobra.Command {
