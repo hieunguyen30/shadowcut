@@ -12,3 +12,6 @@ results/logs/*.log
 state/
 data/*.jsonl
 results/scratch-*
+
+# interview prep material
+docs/
