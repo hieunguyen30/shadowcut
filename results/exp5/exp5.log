@@ -1,0 +1,6 @@
+time=2026-11-16T08:24:11.525-05:00 level=INFO msg="exp5 trial" rate=0.01 trial=1 found=5 of=5 rounds=87 elapsed=6m57.496s rows_read=138622
+time=2026-11-16T08:36:18.712-05:00 level=INFO msg="exp5 trial" rate=0.03 trial=1 found=4 of=5 rounds=55 elapsed=12m5.693s rows_read=263722
+time=2026-11-16T08:39:16.679-05:00 level=INFO msg="exp5 trial" rate=0.1 trial=1 found=5 of=5 rounds=4 elapsed=2m55.322s rows_read=63470
+time=2026-11-16T08:43:44.057-05:00 level=INFO msg="exp5 trial" rate=0.3 trial=1 found=5 of=5 rounds=2 elapsed=4m22.974s rows_read=95582
+Error: json: unsupported value: NaN
+error: json: unsupported value: NaN

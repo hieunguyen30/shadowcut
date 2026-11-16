@@ -1,0 +1,62 @@
+{
+  "env": "local Docker: PostgreSQL 16 vs Cloud Spanner emulator + PGAdapter (EMULATOR, not real Spanner)",
+  "rates": [
+    {
+      "rate": 0.01,
+      "trials": 1,
+      "injected_per_trial": 5,
+      "first_detection_s_median": 53.9364848,
+      "all_detected_s_median": 411.2523825,
+      "rounds_to_all_median": 87,
+      "rows_read_to_all_median": 138622,
+      "rows_read_per_round_mean": 1593.3563218390805,
+      "round_ms_mean": 4725.896551724138,
+      "expected_rounds_for_one_row": 50.25125628140696,
+      "false_drift_reports": 0,
+      "trials_all_detected": 1
+    },
+    {
+      "rate": 0.03,
+      "trials": 1,
+      "injected_per_trial": 5,
+      "first_detection_s_median": 27.0372495,
+      "all_detected_s_median": -1,
+      "rounds_to_all_median": -1,
+      "rows_read_to_all_median": -1,
+      "rows_read_per_round_mean": 4794.945454545455,
+      "round_ms_mean": 13132.763636363636,
+      "expected_rounds_for_one_row": 16.92047377326564,
+      "false_drift_reports": 0,
+      "trials_all_detected": 0
+    },
+    {
+      "rate": 0.1,
+      "trials": 1,
+      "injected_per_trial": 5,
+      "first_detection_s_median": 42.4972616,
+      "all_detected_s_median": 172.5868772,
+      "rounds_to_all_median": 4,
+      "rows_read_to_all_median": 63470,
+      "rows_read_per_round_mean": 15867.5,
+      "round_ms_mean": 43145.75,
+      "expected_rounds_for_one_row": 5.263157894736843,
+      "false_drift_reports": 0,
+      "trials_all_detected": 1
+    },
+    {
+      "rate": 0.3,
+      "trials": 1,
+      "injected_per_trial": 5,
+      "first_detection_s_median": 130.7550117,
+      "all_detected_s_median": 259.348293,
+      "rounds_to_all_median": 2,
+      "rows_read_to_all_median": 95582,
+      "rows_read_per_round_mean": 47791,
+      "round_ms_mean": 129673.5,
+      "expected_rounds_for_one_row": 1.9607843137254901,
+      "false_drift_reports": 0,
+      "trials_all_detected": 1
+    }
+  ],
+  "table": "gh_events"
+}

@@ -30,7 +30,7 @@ PGAdapter, **not real Spanner**. The source was live Wikipedia edits (~17/s) plu
 | **Live parity (Exp 2)** | **79% of 678 shadowed live reads differed.** Causes: replication lag 23%, ties 13%, emulator timeouts 13%, collation 13%, time zone 5%, unsupported 4%, unattributed 4%. App latency unaffected (p50 3.6 ms). |
 | **Faults (Exp 4)** | 6 fault scenarios + crash mid-cutover: **0 lost writes, 0 duplicate effects** (Debezium redelivered up to 114 records per Connect crash; all absorbed). Applier recovery after a kill **1.4 s** (30.1 s before static membership). Gate: **0 unsafe GO samples** against independent ground truth (10 before BUG-005). |
 | **Cutover / rollback** | write freeze **3.5 s** (70 s before BUG-003); both crash-resumable; rollback replays the reverse journal exactly once. |
-| **Verification (Exp 5)** | see below |
+| **Verification (Exp 5)** | Injected drift (5 rows, 40k-row table) was always found with **0 false reports** across 148 rounds. Rows read per round scale linearly with the sampling rate (~1,600 per 1%), while total rows read to find all drift stayed in the same range (63k–139k) from 1% to 30%, as theory predicts. One trial per rate (emulator speed), so the timings are anecdotal. |
 | **Feature probe** | 147 probes: 21 differ, 53 rejected. Text sorts by code point; `concat()` NULLs; `upper('straße')`; `round(2.5)`; date functions in **America/Los_Angeles** even though `SHOW timezone` = UTC. |
 | **Isolation** | 24 concurrent read-modify-writes: Postgres READ COMMITTED **silently lost 19**; Spanner lost 0 but aborted conflicting transactions (the app must retry). |
 | **Disaster recovery** | Spanner target rebuilt from Kafka's CDC history: **688,891 records in 140 s**, row counts equal. |
@@ -78,7 +78,7 @@ The three layers:
 
 1. **`shadowcut scan`** (before migration): reads the schema and the app's SQL (annotated files,
    JSONL query logs, or `pg_stat_statements`) and writes a readiness report. Each finding has a
-   rule, severity, location, explanation, fix, and source. 24 rules
+   rule, severity, location, explanation, fix, and source. 25 rules
    ([docs/HAZARDS.md](docs/HAZARDS.md)), driven by documentation and a 147-probe experiment
    run on both engines.
 2. **`shadowcut shadow proxy | replay`** (during migration): a PostgreSQL wire-protocol proxy

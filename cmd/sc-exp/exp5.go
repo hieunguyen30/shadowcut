@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log/slog"
 	"math"
@@ -56,10 +57,21 @@ func exp5Cmd() *cobra.Command {
 	var trials, inject, maxRounds int
 	var table, column, out string
 	var maxTime time.Duration
+	var fromRounds bool
 	c := &cobra.Command{
 		Use:   "exp5",
 		Short: "Experiment 5: verification cost vs detection speed for injected drift",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if fromRounds {
+				summary, err := summarizeRounds(filepath.Join(out, "rounds.jsonl"), inject)
+				if err != nil {
+					return err
+				}
+				if err := state.WriteJSON(filepath.Join(out, "summary.json"), map[string]any{"env": envLabel, "table": table, "rates": jsonSafe(summary)}); err != nil {
+					return err
+				}
+				return exp5Report(out, table, 40000, summary)
+			}
 			ctx := cmd.Context()
 			pg, err := pgutil.Connect(ctx, pgutil.DefaultPG(), 4)
 			if err != nil {
@@ -144,7 +156,7 @@ func exp5Cmd() *cobra.Command {
 				agg.RowsPerRound, agg.RoundMs = mean(perRound), mean(roundMs)
 				summary = append(summary, agg)
 			}
-			if err := state.WriteJSON(filepath.Join(out, "summary.json"), map[string]any{"env": envLabel, "table": table, "table_rows": size, "rates": summary}); err != nil {
+			if err := state.WriteJSON(filepath.Join(out, "summary.json"), map[string]any{"env": envLabel, "table": table, "table_rows": size, "rates": jsonSafe(summary)}); err != nil {
 				return err
 			}
 			return exp5Report(out, table, size, summary)
@@ -152,6 +164,7 @@ func exp5Cmd() *cobra.Command {
 	}
 	c.Flags().Float64SliceVar(&rates, "rates", []float64{0.01, 0.05, 0.1, 0.25, 0.5, 1}, "sampling rates")
 	c.Flags().IntVar(&trials, "trials", 3, "trials per rate")
+	c.Flags().BoolVar(&fromRounds, "from-rounds", false, "rebuild summary and charts from an existing rounds.jsonl (no database)")
 	c.Flags().IntVar(&inject, "inject", 20, "drifted rows injected per trial")
 	c.Flags().IntVar(&maxRounds, "max-rounds", 400, "max rounds per trial")
 	c.Flags().DurationVar(&maxTime, "max-time", 5*time.Minute, "max time per trial")
@@ -241,7 +254,13 @@ func exp5Report(out, table string, size int64, rs []exp5Rate) error {
 	b.WriteString("| sample rate | first detection (s) | all detected (s) | rounds to all | expected rounds (1 row) | rows read to all | rows read / round | round time (ms) | trials complete | false drift |\n|---|---|---|---|---|---|---|---|---|---|\n")
 	var x, tAll, tFirst, cost []float64
 	for _, r := range rs {
-		fmt.Fprintf(&b, "| %.0f%% | %.1f | %.1f | %.0f | %.1f | %.0f | %.0f | %.0f | %d/%d | %d |\n", r.Rate*100, r.FirstDetectS, r.AllDetectS, r.Rounds, r.ExpectedRounds, r.RowsReadToAll, r.RowsPerRound, r.RoundMs, r.Complete, r.Trials, r.FalseDrift)
+		na := func(v float64, f string) string {
+			if math.IsNaN(v) || v < 0 {
+				return "not reached"
+			}
+			return fmt.Sprintf(f, v)
+		}
+		fmt.Fprintf(&b, "| %.0f%% | %s | %s | %s | %.1f | %s | %.0f | %.0f | %d/%d | %d |\n", r.Rate*100, na(r.FirstDetectS, "%.1f"), na(r.AllDetectS, "%.1f"), na(r.Rounds, "%.0f"), r.ExpectedRounds, na(r.RowsReadToAll, "%.0f"), r.RowsPerRound, r.RoundMs, r.Complete, r.Trials, r.FalseDrift)
 		x = append(x, r.Rate*100)
 		tAll = append(tAll, nz(r.AllDetectS))
 		tFirst = append(tFirst, nz(r.FirstDetectS))
@@ -263,4 +282,85 @@ func nz(v float64) float64 {
 		return 0
 	}
 	return v
+}
+
+// summarizeRounds rebuilds per-rate statistics from rounds.jsonl (no database).
+func summarizeRounds(path string, inject int) ([]exp5Rate, error) {
+	b, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	type key struct {
+		rate  float64
+		trial int
+	}
+	byTrial := map[key][]exp5Round{}
+	var rates []float64
+	seenRate := map[float64]bool{}
+	for _, line := range strings.Split(strings.TrimSpace(string(b)), "\n") {
+		var r exp5Round
+		if json.Unmarshal([]byte(line), &r) != nil {
+			continue
+		}
+		k := key{r.Rate, r.Trial}
+		byTrial[k] = append(byTrial[k], r)
+		if !seenRate[r.Rate] {
+			seenRate[r.Rate] = true
+			rates = append(rates, r.Rate)
+		}
+	}
+	var out []exp5Rate
+	for _, rate := range rates {
+		agg := exp5Rate{Rate: rate, Injected: inject, ExpectedRounds: 1 / (1 - math.Pow(1-rate, 2))}
+		var firsts, alls, rounds, rows, perRound, roundMs []float64
+		for k, rs := range byTrial {
+			if k.rate != rate {
+				continue
+			}
+			agg.Trials++
+			cum := 0.0
+			first := -1.0
+			for _, r := range rs {
+				cum += float64(r.RowsPG + r.RowsSP)
+				perRound = append(perRound, float64(r.RowsPG+r.RowsSP))
+				roundMs = append(roundMs, float64(r.RoundMs))
+				if first < 0 && r.TotalFound > 0 {
+					first = r.ElapsedS
+				}
+				if r.TotalFound >= inject {
+					agg.Complete++
+					alls = append(alls, r.ElapsedS)
+					rounds = append(rounds, float64(r.Round))
+					rows = append(rows, cum)
+					break
+				}
+			}
+			if first >= 0 {
+				firsts = append(firsts, first)
+			}
+		}
+		agg.FirstDetectS, agg.AllDetectS, agg.Rounds, agg.RowsReadToAll = median(firsts), median(alls), median(rounds), median(rows)
+		agg.RowsPerRound, agg.RoundMs = mean(perRound), mean(roundMs)
+		out = append(out, agg)
+	}
+	return out, nil
+}
+
+// jsonSafe replaces NaN (incomplete trials) with -1 for JSON output.
+func jsonSafe(rs []exp5Rate) []exp5Rate {
+	fix := func(v *float64) {
+		if math.IsNaN(*v) {
+			*v = -1
+		}
+	}
+	out := append([]exp5Rate(nil), rs...)
+	for i := range out {
+		fix(&out[i].FirstDetectS)
+		fix(&out[i].AllDetectS)
+		fix(&out[i].Rounds)
+		fix(&out[i].RowsReadToAll)
+		fix(&out[i].RowsPerRound)
+		fix(&out[i].RoundMs)
+	}
+	return out
 }
