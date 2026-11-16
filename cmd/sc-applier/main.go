@@ -37,6 +37,15 @@ func main() {
 	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	// Bounded shutdown: exit before Docker's 10s SIGKILL even if a Spanner call is
+	// blocked (a SIGKILL can leave an emulator transaction open, BUG-009). An
+	// unfinished batch is uncommitted in Kafka and is redelivered and deduplicated.
+	go func() {
+		<-ctx.Done()
+		time.Sleep(8 * time.Second)
+		slog.Error("shutdown deadline exceeded; exiting")
+		os.Exit(1)
+	}()
 	meter, shutdown := telemetry.Setup("sc-applier", "")
 	defer shutdown(context.Background())
 

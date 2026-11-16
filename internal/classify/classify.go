@@ -58,6 +58,8 @@ type Result struct {
 // Input bundles everything needed to classify one mismatch.
 type Input struct {
 	Info    sqlscan.Info
+	Tokens  []sqlscan.Token // statement tokens (optional; enables predicate analysis)
+	Args    []any           // bind parameters (optional)
 	Primary *rowset.Result
 	Shadow  *rowset.Result
 	Diff    compare.Diff
@@ -114,6 +116,9 @@ func Classify(in Input) Result {
 		if r, ok := explainBoundary(in, keys, onlyP, onlyS); ok {
 			return r
 		}
+	}
+	if textRangePredicate(in.Tokens, in.Args) && (in.Ctx.Recheck == nil || !in.Ctx.Recheck.Equal()) {
+		return Result{Category: Collation, Confidence: "medium", Reason: "the statement compares a column with a text value using <, >, or BETWEEN; the engines evaluate that range under different collations, so different rows qualify"}
 	}
 	if in.Info.HasLimit && len(in.Info.OrderBy) == 0 {
 		return Result{Category: Nondeterminism, Confidence: "medium", Reason: "LIMIT without ORDER BY: each engine may return any qualifying rows"}
@@ -471,4 +476,33 @@ func sameEntity(a, b rowset.Row) bool {
 		}
 	}
 	return texts > 0
+}
+
+// textRangePredicate detects "col <op> 'text'" / "col <op> $n" (string argument)
+// range comparisons, whose result depends on the collation.
+func textRangePredicate(toks []sqlscan.Token, args []any) bool {
+	isText := func(t sqlscan.Token) bool {
+		if t.Kind == sqlscan.TString {
+			return true
+		}
+		if t.Kind == sqlscan.TParam {
+			var n int
+			if _, err := fmt.Sscanf(t.Text, "$%d", &n); err == nil && n >= 1 && n <= len(args) {
+				_, ok := args[n-1].(string)
+				return ok
+			}
+		}
+		return false
+	}
+	for i := 1; i+1 < len(toks); i++ {
+		t := toks[i]
+		isRange := t.Kind == sqlscan.TOp && (t.Text == "<" || t.Text == ">" || t.Text == "<=" || t.Text == ">=")
+		if isRange && ((toks[i-1].IsIdent() && isText(toks[i+1])) || (isText(toks[i-1]) && toks[i+1].IsIdent())) {
+			return true
+		}
+		if t.Is("between") && toks[i-1].IsIdent() && isText(toks[i+1]) {
+			return true
+		}
+	}
+	return false
 }

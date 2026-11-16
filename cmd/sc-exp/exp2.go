@@ -127,8 +127,12 @@ func firstExamples(path string) (map[string]shadow.Outcome, error) {
 			continue
 		}
 		k := string(o.Category)
-		if _, ok := out[k]; !ok && o.Confidence != "low" {
+		cur, ok := out[k]
+		switch {
+		case !ok && o.Confidence != "low":
 			out[k] = o
+		case ok && cur.Confidence != "high" && o.Confidence == "high":
+			out[k] = o // prefer high-confidence examples
 		}
 	}
 	return out, sc.Err()

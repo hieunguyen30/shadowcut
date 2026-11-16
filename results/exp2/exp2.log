@@ -1,0 +1,50 @@
+ Container shadowcut-postgres-1  Running
+ Container shadowcut-spanner-1  Running
+ Container shadowcut-demoapp-1  Recreate
+ Container shadowcut-shadow-1  Recreate
+ Container shadowcut-demoapp-1  Recreated
+ Container shadowcut-shadow-1  Recreated
+ Container shadowcut-demoapp-1  Starting
+ Container shadowcut-shadow-1  Starting
+ Container shadowcut-demoapp-1  Started
+ Container shadowcut-shadow-1  Started
+
+running (11m02.7s), 6/6 VUs, 8387 complete and 0 interrupted iterations
+default   [  99% ] 6 VUs  09m55.9s/10m0s
+
+running (11m03.7s), 6/6 VUs, 8402 complete and 0 interrupted iterations
+default   [  99% ] 6 VUs  09m56.9s/10m0s
+
+running (11m04.7s), 6/6 VUs, 8414 complete and 0 interrupted iterations
+default   [ 100% ] 6 VUs  09m57.9s/10m0s
+
+running (11m05.7s), 6/6 VUs, 8429 complete and 0 interrupted iterations
+default   [ 100% ] 6 VUs  09m58.9s/10m0s
+
+running (11m06.7s), 6/6 VUs, 8441 complete and 0 interrupted iterations
+default   [ 100% ] 6 VUs  09m59.9s/10m0s
+
+
+  █ TOTAL RESULTS 
+
+    HTTP
+    http_req_duration..............: avg=25.44ms  p(50)=3.62ms   p(95)=162.68ms max=3.51s   
+      { expected_response:true }...: avg=25.44ms  p(50)=3.62ms   p(95)=162.68ms max=3.51s   
+    http_req_failed................: 0.00%  0 out of 8946
+    http_reqs......................: 8946   13.410478/s
+
+    EXECUTION
+    iteration_duration.............: avg=426.21ms p(50)=426.86ms p(95)=609.21ms max=809.15ms
+    iterations.....................: 8447   12.662453/s
+    vus............................: 6      min=6         max=6
+    vus_max........................: 6      min=6         max=6
+
+    NETWORK
+    data_received..................: 74 MB  110 kB/s
+    data_sent......................: 867 kB 1.3 kB/s
+
+
+
+
+running (11m07.1s), 0/6 VUs, 8447 complete and 0 interrupted iterations
+default ✓ [ 100% ] 6 VUs  10m0s

@@ -162,7 +162,7 @@ func rewriteTieBreak(sql string, schema *sqlscan.Schema) string {
 	}
 	add := ", " + pk
 	if len(info.OrderBy) == 0 {
-		add = "ORDER BY " + pk
+		add = " ORDER BY " + pk
 	}
 	if insertAt < 0 {
 		return strings.TrimRight(sql, " \n;") + " " + strings.TrimPrefix(add, " ")

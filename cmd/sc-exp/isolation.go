@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -35,6 +36,7 @@ type isoResult struct {
 
 func isolationCmd() *cobra.Command {
 	var workers, ops int
+	var pauseApplier bool
 	var out string
 	c := &cobra.Command{
 		Use:   "isolation",
@@ -52,14 +54,26 @@ func isolationCmd() *cobra.Command {
 			}
 			defer sp.Close()
 			title := fmt.Sprintf("Isolation probe %d", time.Now().Unix())
-			for _, p := range []string{"pg", "sp"} {
-				pool := pg
-				if p == "sp" {
-					pool = sp
+			// seed in Postgres; CDC delivers the row to Spanner
+			if _, err := pg.Exec(ctx, `INSERT INTO pages (wiki, title, edit_count, last_edit_ts) VALUES ('isowiki', $1, 0, now())`, title); err != nil {
+				return fmt.Errorf("seed: %w", err)
+			}
+			for deadline := time.Now().Add(time.Minute); ; {
+				var n int64
+				_ = sp.QueryRow(ctx, `SELECT count(*) FROM pages WHERE wiki = 'isowiki' AND title = $1`, title).Scan(&n)
+				if n == 1 {
+					break
 				}
-				if _, err := pool.Exec(ctx, `INSERT INTO pages (wiki, title, edit_count, last_edit_ts) VALUES ('isowiki', $1, 0, now())`, title); err != nil {
-					return fmt.Errorf("%s seed: %w", p, err)
+				if time.Now().After(deadline) {
+					return fmt.Errorf("seed row did not replicate to Spanner")
 				}
+				time.Sleep(500 * time.Millisecond)
+			}
+			if pauseApplier {
+				// Emulator-only workaround: one read-write transaction at a time, and the
+				// applier's heartbeat transactions starve the Spanner variants.
+				_ = docker("stop", "shadowcut-applier-1")(ctx)
+				defer docker("start", "shadowcut-applier-1")(context.Background())
 			}
 			var results []isoResult
 			for _, v := range []struct {
@@ -132,6 +146,7 @@ func isolationCmd() *cobra.Command {
 		},
 	}
 	c.Flags().IntVar(&workers, "workers", 16, "concurrent workers")
+	c.Flags().BoolVar(&pauseApplier, "pause-applier", true, "pause the CDC applier during the run (emulator single-RW-transaction workaround)")
 	c.Flags().IntVar(&ops, "ops", 25, "increments per worker")
 	c.Flags().StringVar(&out, "out", "results/isolation", "output directory")
 	return c

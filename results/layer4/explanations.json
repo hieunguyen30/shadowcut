@@ -1,0 +1,479 @@
+[
+  {
+    "name": "coll_order_title",
+    "category": "collation",
+    "sql": "SELECT title FROM pages WHERE wiki = 'enwiki' ORDER BY title LIMIT 200",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"4000 Hipparchus\" vs \"\\\"Dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "coll_min_max",
+    "category": "collation",
+    "sql": "SELECT wiki, min(title) AS first_title, max(title) AS last_title FROM pages GROUP BY wiki ORDER BY wiki",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: last_title: max() over text returns \"Torre d'os Urreya\" vs \"Torre de Sant Per de Calanda\": the engines order strings differently; last_title: max() over text returns \"Vikipediya:İstifadəçi hüquqları üçün müraciətlər\" vs \"İstifadəçi:ArxivBot/konfiqurasiya/doc\": the engines order strings differently; first_title: min() over text returns \"ballistite\" vs \"EARPHONE\": the engines order strings differently",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "coll_range_count",
+    "category": "other",
+    "sql": "SELECT count(*) AS n FROM pages WHERE title \u003e 'M'",
+    "explanation": {
+      "summary": "Mismatch classified as other. Evidence: 1/1 rows differ persistently (still different after recheck) and could not be attributed",
+      "fix": "Inspect the differing rows in the mismatch log; no automatic rewrite is known.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "coll_lower_order",
+    "category": "collation",
+    "sql": "SELECT lower(title) AS t FROM pages WHERE wiki = 'enwiki' ORDER BY t LIMIT 100",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"2026–27 australian region cyclone season\" vs \"\\\"dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "coll_string_agg",
+    "category": "collation",
+    "sql": "SELECT wiki, string_agg(title, ' | ' ORDER BY title) AS titles FROM pages WHERE wiki IN ('dewiki', 'frwiki') GROUP BY wiki ORDER BY wiki",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: titles: string_agg() over text returns \"180° Berlin | 1. Badminton-Bundesliga | 1. FC Kaiserslaut...\" vs \"1. Badminton-Bundesliga | 1. FC Kaiserslautern | 180° Ber...\": the engines order strings differently; titles: string_agg() over text returns \"1814 en arts plastiques | 1884 en arts plastiques | 1963 ...\" vs \"(7) Iris | 1814 en arts plastiques | 1884 en arts plastiq...\": the engines order strings differently",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "coll_window_rank",
+    "category": "unsupported",
+    "sql": "SELECT title, row_number() OVER (ORDER BY title) AS rn FROM pages WHERE wiki = 'commonswiki' ORDER BY rn LIMIT 100",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Statements with WINDOW clauses are not supported",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "null_order_desc",
+    "category": "collation",
+    "sql": "SELECT DISTINCT user_name FROM edits WHERE wiki = 'wikidatawiki' ORDER BY user_name DESC LIMIT 5",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"列维劳德\" vs \"대구버스매니아\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "null_order_asc_tail",
+    "category": "collation",
+    "sql": "SELECT user_name, count(*) AS n FROM edits GROUP BY user_name ORDER BY user_name LIMIT 100000",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"리듬\" vs \"%Pier%\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (order)",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "concat_null",
+    "category": "null_semantics",
+    "sql": "SELECT id, concat(user_name, ' / ', wiki) AS label FROM edits WHERE user_name IS NULL ORDER BY id LIMIT 20",
+    "explanation": {
+      "summary": "concat()/array_cat()/array_to_string() return NULL if any argument is NULL. PostgreSQL's concat() ignores NULL arguments; Spanner's returns NULL (documented known issue; probe fn_concat: 'apple' vs NULL). Evidence: label: concat returns NULL on one engine ( / wikidatawiki vs NULL): NULL handling of concat() differs; label: concat returns NULL on one engine ( / zhwiki vs NULL): NULL handling of concat() differs; label: concat returns NULL on one engine ( / enwiki vs NULL): NULL handling of concat() differs",
+      "fix": "Wrap nullable arguments in coalesce(x, '').",
+      "fixed_sql": "SELECT id, concat(coalesce(user_name::text, ''), ' / ', coalesce(wiki::text, '')) AS label FROM edits WHERE user_name IS NULL ORDER BY id LIMIT 20",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": true,
+    "preserved": true
+  },
+  {
+    "name": "concat_ws_null",
+    "category": "unsupported",
+    "sql": "SELECT id, concat_ws(' / ', user_name, wiki) AS label FROM edits WHERE user_name IS NULL ORDER BY id LIMIT 20",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Postgres function concat_ws(text, text, text) is not supported",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "tz_date_trunc",
+    "category": "timezone",
+    "sql": "SELECT date_trunc('day', edit_ts) AS day, count(*) AS n FROM edits GROUP BY 1 ORDER BY 1",
+    "explanation": {
+      "summary": "Date/time function depends on the default time zone. Spanner evaluates 2-argument date_trunc, extract, to_char, ::date, ::text and timestamptz + interval in America/Los_Angeles (even though SHOW timezone reports UTC); Postgres uses the session time zone (UTC here). Evidence: day: timestamps differ by 8h0m0s (a whole time-zone offset)",
+      "fix": "Pass the time zone explicitly: date_trunc('day', ts, 'UTC'); do calendar math in the application.",
+      "fixed_sql": "SELECT date_trunc('day', edit_ts, 'UTC') AS day, count(*) AS n FROM edits GROUP BY 1 ORDER BY 1",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "tz_text_cast",
+    "category": "timezone",
+    "sql": "SELECT id, edit_ts::text AS ts FROM edits ORDER BY id LIMIT 20",
+    "explanation": {
+      "summary": "Date/time function depends on the default time zone. Spanner evaluates 2-argument date_trunc, extract, to_char, ::date, ::text and timestamptz + interval in America/Los_Angeles (even though SHOW timezone reports UTC); Postgres uses the session time zone (UTC here). Evidence: ts: same instant rendered in different time zones (\"2026-11-16 08:32:53.238+00\" vs \"2026-11-16 00:32:53.238-08\"); ts: same instant rendered in different time zones (\"2026-11-16 08:32:53.258+00\" vs \"2026-11-16 00:32:53.258-08\"); ts: same instant rendered in different time zones (\"2026-11-16 08:32:53.26+00\" vs \"2026-11-16 00:32:53.260-08\")",
+      "fix": "Pass the time zone explicitly: date_trunc('day', ts, 'UTC'); do calendar math in the application.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "tz_extract_hour",
+    "category": "timezone",
+    "sql": "SELECT extract(hour FROM edit_ts) AS h, count(*) AS n FROM edits GROUP BY 1 ORDER BY 1",
+    "explanation": {
+      "summary": "Date/time function depends on the default time zone. Spanner evaluates 2-argument date_trunc, extract, to_char, ::date, ::text and timestamptz + interval in America/Los_Angeles (even though SHOW timezone reports UTC); Postgres uses the session time zone (UTC here). Evidence: Postgres reproduces Spanner's result when the session time zone is America/Los_Angeles (counterfactual re-execution)",
+      "fix": "Pass the time zone explicitly: date_trunc('day', ts, 'UTC'); do calendar math in the application.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "float_sum",
+    "category": "precision",
+    "sql": "SELECT sum(growth_ratio) AS s FROM edits",
+    "explanation": {
+      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: s: 108203.99822816972 vs 108203.99822816973 (relative difference 1.3e-16)",
+      "fix": "Use numeric for values that are compared exactly, or round results before comparing/displaying.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "float_avg_by_wiki",
+    "category": "precision",
+    "sql": "SELECT wiki, avg(growth_ratio) AS g FROM edits GROUP BY wiki ORDER BY wiki",
+    "explanation": {
+      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: g: 1.0269600292310224 vs 1.0269600292310221 (relative difference 2.2e-16); g: 1.0121692563862206 vs 1.0121692563862204 (relative difference 2.2e-16); g: 1.9150192545796603 vs 1.91501925457966 (relative difference 1.2e-16)",
+      "fix": "Use numeric for values that are compared exactly, or round results before comparing/displaying.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "limit_without_order",
+    "category": "nondeterministic_order",
+    "sql": "SELECT id, wiki FROM edits LIMIT 10",
+    "explanation": {
+      "summary": "ORDER BY does not determine a unique order. When ORDER BY keys tie, the order among tied rows is unspecified; the two engines break ties differently, and with LIMIT they return different rows. Evidence: LIMIT without ORDER BY: each engine may return any qualifying rows",
+      "fix": "Append a unique column (the primary key) as a final tiebreaker.",
+      "fixed_sql": "SELECT id, wiki FROM editsORDER BY id\nLIMIT 10",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": false,
+    "preserved": null,
+    "fix_error": "syntax error at or near \"id\" (SQLSTATE 42601) syntax error at or near \"id\""
+  },
+  {
+    "name": "gh_repo_ties",
+    "category": "nondeterministic_order",
+    "sql": "SELECT repo_name, count(*) AS events FROM gh_events GROUP BY repo_name ORDER BY events DESC LIMIT 20",
+    "explanation": {
+      "summary": "ORDER BY does not determine a unique order. When ORDER BY keys tie, the order among tied rows is unspecified; the two engines break ties differently, and with LIMIT they return different rows. Evidence: rows tie on every ORDER BY key; each engine broke the tie differently (order)",
+      "fix": "Append a unique column (the primary key) as a final tiebreaker.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_round_numeric",
+    "category": "unsupported",
+    "sql": "SELECT wiki, title, round(avg_delta, 1) AS r FROM pages ORDER BY wiki, title LIMIT 10",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: function round(numeric, bigint) does not exist\nHint: No function matches the given name and argument types. You might need to add explicit type casts.",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_distinct_on",
+    "category": "unsupported",
+    "sql": "SELECT DISTINCT ON (wiki) wiki, page_title, edit_ts FROM edits ORDER BY wiki, edit_ts DESC",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Statements with DISTINCT ON clauses are not supported",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_row_compare",
+    "category": "unsupported",
+    "sql": "SELECT id FROM edits WHERE (edit_ts, id) \u003c (now(), 1000000000) ORDER BY edit_ts DESC, id DESC LIMIT 5",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Unsupported PostgreSQL expression type: RowCompareExpr",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_any_array_literal",
+    "category": "unsupported",
+    "sql": "SELECT count(*) AS n FROM edits WHERE wiki = ANY('{enwiki,dewiki}')",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: ANY, SOME, and IN expressions with array literal arguments are not supported. Try using an array constructor (ARRAY[])",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "fixed_sql": "SELECT count(*) AS n FROM edits WHERE wiki = ANY(ARRAY['enwiki', 'dewiki'])",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": false,
+    "preserved": true
+  },
+  {
+    "name": "unsup_collate",
+    "category": "unsupported",
+    "sql": "SELECT title FROM pages ORDER BY title COLLATE \"C\" LIMIT 5",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Unsupported PostgreSQL expression type: CollateExpr",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_recursive_cte",
+    "category": "unsupported",
+    "sql": "WITH RECURSIVE n(i) AS (SELECT 1 UNION ALL SELECT i + 1 FROM n WHERE i \u003c 5) SELECT i FROM n",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Recursive WITH expressions are not supported",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_json_build_object",
+    "category": "unsupported",
+    "sql": "SELECT json_build_object('id', id, 'wiki', wiki) AS j FROM edits ORDER BY id LIMIT 5",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Unable to resolve argument type. Please consider adding an explicit cast",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_generate_series_select",
+    "category": "unsupported",
+    "sql": "SELECT generate_series(1, 3) AS g",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Postgres function generate_series(bigint, bigint) is not supported",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "unsup_for_update_autocommit",
+    "category": "unsupported",
+    "sql": "SELECT id FROM edits ORDER BY id LIMIT 1 FOR UPDATE",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: FOR UPDATE is not supported in this transaction type.",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "similar_to",
+    "category": "unsupported",
+    "sql": "SELECT count(*) AS n FROM edits WHERE page_title SIMILAR TO '[A-Z]%'",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Postgres function similar_to_escape(text) is not supported",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "length_unicode",
+    "category": "unsupported",
+    "sql": "SELECT id, length(page_title) AS chars, octet_length(page_title) AS bytes FROM edits ORDER BY id LIMIT 200",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Postgres function octet_length(text) is not supported",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "top_pages",
+    "category": "nondeterministic_order",
+    "sql": "SELECT wiki, title, edit_count, last_edit_ts\nFROM pages\nWHERE wiki = $1\nORDER BY edit_count DESC\nLIMIT $2",
+    "explanation": {
+      "summary": "ORDER BY does not determine a unique order. When ORDER BY keys tie, the order among tied rows is unspecified; the two engines break ties differently, and with LIMIT they return different rows. Evidence: rows tie on every ORDER BY key; each engine broke the tie differently (limit)",
+      "fix": "Append a unique column (the primary key) as a final tiebreaker.",
+      "fixed_sql": "SELECT wiki, title, edit_count, last_edit_ts\nFROM pages\nWHERE wiki = $1\nORDER BY edit_count DESC, wiki, title\nLIMIT $2",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "recent_edits_by_user",
+    "category": "nondeterministic_order",
+    "sql": "SELECT id, wiki, page_title, size_delta, edit_ts\nFROM edits\nWHERE user_name = $1\nORDER BY edit_ts DESC\nLIMIT 50",
+    "explanation": {
+      "summary": "ORDER BY does not determine a unique order. When ORDER BY keys tie, the order among tied rows is unspecified; the two engines break ties differently, and with LIMIT they return different rows. Evidence: rows tie on every ORDER BY key; each engine broke the tie differently (order)",
+      "fix": "Append a unique column (the primary key) as a final tiebreaker.",
+      "fixed_sql": "SELECT id, wiki, page_title, size_delta, edit_ts\nFROM edits\nWHERE user_name = $1\nORDER BY edit_ts DESC, id\nLIMIT 50",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "search_titles",
+    "category": "collation",
+    "sql": "SELECT DISTINCT page_title, wiki\nFROM edits\nWHERE page_title ILIKE $1 || '%'\nORDER BY page_title\nLIMIT 50",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"w\" vs \"W. Cleon Skousen\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "feed_page",
+    "category": "unsupported",
+    "sql": "SELECT id, wiki, page_title, user_name, size_delta, edit_ts\nFROM edits\nWHERE (edit_ts, id) \u003c ($1, $2)\nORDER BY edit_ts DESC, id DESC\nLIMIT 25",
+    "explanation": {
+      "summary": "Query syntax not supported by Spanner. Rejected constructs observed: DISTINCT ON, row-value comparisons, COLLATE, = ANY('{..}') array literals, WITH RECURSIVE, window functions (OVER), LATERAL, GROUPING SETS/ROLLUP, SIMILAR TO, FOR UPDATE outside a read-write transaction, SKIP LOCKED/NOWAIT, set-returning functions in the select list, timestamp without time zone. Evidence: Spanner rejected the query: Unsupported PostgreSQL expression type: RowCompareExpr",
+      "fix": "Rewrite (e.g. keyset pagination as (a \u003c $1) OR (a = $1 AND b \u003c $2); ANY(ARRAY[...]) instead of '{...}').",
+      "fixed_sql": "SELECT id, wiki, page_title, user_name, size_delta, edit_ts\nFROM edits\nWHERE (edit_ts \u003c $1 OR (edit_ts = $1 AND id \u003c $2))\nORDER BY edit_ts DESC, id DESC\nLIMIT 25",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": true,
+    "preserved": true
+  },
+  {
+    "name": "pages_alpha",
+    "category": "collation",
+    "sql": "SELECT title, edit_count\nFROM pages\nWHERE wiki = $1 AND title \u003e $2\nORDER BY title\nLIMIT 50",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"Manichaeism\" vs \"M Countdown\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "wiki_stats",
+    "category": "precision",
+    "sql": "SELECT wiki, count(*) AS edits, avg(size_delta) AS avg_delta, avg(growth_ratio) AS avg_growth, sum(growth_ratio) AS sum_growth\nFROM edits\nGROUP BY wiki\nORDER BY edits DESC, wiki",
+    "explanation": {
+      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: avg_growth: 1.9150192545796603 vs 1.91501925457966 (relative difference 1.2e-16); sum_growth: 42731.73964669054 vs 42731.739646690534 (relative difference 1.7e-16); avg_growth: 1.0269600292310224 vs 1.0269600292310221 (relative difference 2.2e-16)",
+      "fix": "Use numeric for values that are compared exactly, or round results before comparing/displaying.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "daily_counts",
+    "category": "timezone",
+    "sql": "SELECT date_trunc('day', edit_ts) AS day, count(*) AS edits\nFROM edits\nWHERE wiki = $1\nGROUP BY 1\nORDER BY 1",
+    "explanation": {
+      "summary": "Date/time function depends on the default time zone. Spanner evaluates 2-argument date_trunc, extract, to_char, ::date, ::text and timestamptz + interval in America/Los_Angeles (even though SHOW timezone reports UTC); Postgres uses the session time zone (UTC here). Evidence: day: timestamps differ by 8h0m0s (a whole time-zone offset)",
+      "fix": "Pass the time zone explicitly: date_trunc('day', ts, 'UTC'); do calendar math in the application.",
+      "fixed_sql": "SELECT date_trunc('day', edit_ts, 'UTC') AS day, count(*) AS edits\nFROM edits\nWHERE wiki = $1\nGROUP BY 1\nORDER BY 1",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "top_editors",
+    "category": "collation",
+    "sql": "SELECT user_name, count(*) AS edits\nFROM edits\nWHERE wiki = $1\nGROUP BY user_name\nORDER BY user_name\nLIMIT 100",
+    "explanation": {
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"레스터기타\" vs \"B.NIROSHAN\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  }
+]

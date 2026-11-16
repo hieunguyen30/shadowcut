@@ -226,7 +226,7 @@ func (e *Engine) Process(ctx context.Context, j Job) Outcome {
 	o.Equal = d.Equal()
 	if !o.Equal {
 		cctx := classify.Context{InTxn: j.InTxn, TxnHasWrites: j.TxnWrites}
-		c := classify.Classify(classify.Input{Info: info, Primary: primary, Shadow: shadow, Diff: d, Ctx: cctx})
+		c := classify.Classify(classify.Input{Info: info, Tokens: toks, Args: j.Args, Primary: primary, Shadow: shadow, Diff: d, Ctx: cctx})
 		// Recheck (re-read both sides after the lag bound, bracketed) only when the
 		// rows themselves do not prove the cause. Cell-level evidence (a NULL from
 		// concat, a whole-hour shift, last-digit float noise, a Unicode case
@@ -235,7 +235,7 @@ func (e *Engine) Process(ctx context.Context, j Job) Outcome {
 			rd := e.recheck(ctx, j, mode)
 			cctx.Recheck = &rd
 			o.Rechecked = true
-			c = classify.Classify(classify.Input{Info: info, Primary: primary, Shadow: shadow, Diff: d, Ctx: cctx})
+			c = classify.Classify(classify.Input{Info: info, Tokens: toks, Args: j.Args, Primary: primary, Shadow: shadow, Diff: d, Ctx: cctx})
 		}
 		// Counterfactual: does Postgres reproduce Spanner's result when evaluated in
 		// Spanner's default time zone? If so, the time zone is the root cause.

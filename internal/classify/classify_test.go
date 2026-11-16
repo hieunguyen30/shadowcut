@@ -299,3 +299,21 @@ func TestTimeoutIsNotUnsupported(t *testing.T) {
 		t.Fatalf("got %+v", r)
 	}
 }
+
+func TestTextRangePredicateIsCollation(t *testing.T) {
+	sql := "SELECT title FROM pages WHERE wiki = $1 AND title > $2 ORDER BY title LIMIT 50"
+	in := info(sql)
+	p := res([]string{"title"}, rowset.Row{txt("Property:P1")}, rowset.Row{txt("Property:P2")})
+	s := res([]string{"title"})
+	d := compare.Compare(p, s, compare.Ordered)
+	r := Classify(Input{Info: in, Tokens: sqlscan.Lex(sql), Args: []any{"wikidatawiki", "Ö"}, Primary: p, Shadow: s, Diff: d})
+	if r.Category != Collation {
+		t.Fatalf("got %+v", r)
+	}
+	// numeric range: not collation
+	sql = "SELECT id FROM edits WHERE id > $1"
+	r = Classify(Input{Info: info(sql), Tokens: sqlscan.Lex(sql), Args: []any{int64(5)}, Primary: p, Shadow: s, Diff: d})
+	if r.Category == Collation {
+		t.Fatalf("numeric range classified as collation")
+	}
+}

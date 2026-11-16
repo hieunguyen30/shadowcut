@@ -129,10 +129,10 @@ func runCrashMidCutover(ctx context.Context, pg, sp *pgxpool.Pool) (cutoverCrash
 	// time and the applier's per-second heartbeat transactions starve app writes
 	// (results/emulator-limits). Postgres writes are frozen/switched, so pausing the
 	// applier while the app is on Spanner loses nothing; it is resumed before rollback.
-	_ = docker("pause", "shadowcut-applier-1")(ctx)
-	step("applier paused (emulator single-RW-transaction workaround)")
+	_ = docker("stop", "shadowcut-applier-1")(ctx)
+	step("applier stopped gracefully (emulator single-RW-transaction workaround)")
 	time.Sleep(spannerWindow)
-	_ = docker("unpause", "shadowcut-applier-1")(ctx)
+	_ = docker("start", "shadowcut-applier-1")(ctx)
 
 	// 3. rollback crashes after freezing
 	step("rollback (crash injected after freeze)")
