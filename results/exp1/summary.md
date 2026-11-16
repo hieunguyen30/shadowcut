@@ -1,17 +1,16 @@
 Statements scored: 61 (3 runs each). local Docker: PostgreSQL 16 vs Cloud Spanner emulator + PGAdapter (EMULATOR, not real Spanner).
 
-**Overall (query × category): precision 0.71, recall 0.97** (TP 36, FP 15, FN 1).
+**Overall (query × category): precision 0.73, recall 1.00** (TP 37, FP 14, FN 0).
 
-Baseline: the curated set's hand-written `expect` labels as predictions: precision 0.73, recall 0.79 (TP 22, FP 8, FN 6).
+Baseline: the curated set's hand-written `expect` labels as predictions: precision 0.77, recall 0.79 (TP 23, FP 7, FN 6).
 
 | category | TP | FP | FN | precision | recall |
 |---|---|---|---|---|---|
-| collation | 9 | 5 | 0 | 0.64 | 1.00 |
+| collation | 10 | 4 | 0 | 0.71 | 1.00 |
 | function_semantics | 0 | 2 | 0 | 0.00 | 0.00 |
 | nondeterministic_order | 5 | 3 | 0 | 0.62 | 1.00 |
 | null_ordering | 0 | 3 | 0 | 0.00 | 0.00 |
 | null_semantics | 1 | 1 | 0 | 0.50 | 1.00 |
-| other | 0 | 0 | 1 | 0.00 | 0.00 |
 | precision | 3 | 0 | 0 | 1.00 | 1.00 |
 | timezone | 4 | 1 | 0 | 0.80 | 1.00 |
 | unsupported | 14 | 0 | 0 | 1.00 | 1.00 |
@@ -22,7 +21,7 @@ Baseline: the curated set's hand-written `expect` labels as predictions: precisi
 |---|---|---|---|---|
 | coll_order_title | curated | collation | collation | ✔ |
 | coll_min_max | curated | collation | collation | ✔ |
-| coll_range_count | curated | collation | other | FP [collation]; FN [other] |
+| coll_range_count | curated | collation | collation | ✔ |
 | coll_lower_order | curated | collation, function_semantics | collation | FP [function_semantics] |
 | coll_string_agg | curated | collation | collation | ✔ |
 | coll_window_rank | curated | collation, unsupported | unsupported | unobservable (rejected) [collation] |
@@ -43,7 +42,7 @@ Baseline: the curated set's hand-written `expect` labels as predictions: precisi
 | float_sum | curated | precision | precision | ✔ |
 | float_avg_by_wiki | curated | collation, precision | precision | FP [collation] |
 | numeric_avg | curated | — | — | ✔ |
-| numeric_division | curated | collation | — | FP [collation] |
+| numeric_division | curated | collation | timeout | FP [collation] |
 | int_avg_control | curated | — | — | ✔ |
 | limit_without_order | curated | nondeterministic_order | nondeterministic_order | ✔ |
 | order_ties_limit | curated | nondeterministic_order | — | FP [nondeterministic_order] |
@@ -66,12 +65,12 @@ Baseline: the curated set's hand-written `expect` labels as predictions: precisi
 | jsonb_whole | curated | — | — | ✔ |
 | length_unicode | curated | unsupported | unsupported | ✔ |
 | top_pages | app | nondeterministic_order | nondeterministic_order | ✔ |
-| recent_edits_by_user | app | nondeterministic_order | nondeterministic_order | ✔ |
+| recent_edits_by_user | app | nondeterministic_order | — | FP [nondeterministic_order] |
 | edits_in_range | app | — | — | ✔ |
 | search_titles | app | collation, nondeterministic_order | collation | FP [nondeterministic_order] |
 | feed_page | app | unsupported | unsupported | ✔ |
 | feed_first_page | app | — | — | ✔ |
-| feed_offset | app | nondeterministic_order | — | FP [nondeterministic_order] |
+| feed_offset | app | nondeterministic_order | nondeterministic_order | ✔ |
 | pages_alpha | app | collation | collation | ✔ |
 | wiki_stats | app | collation, precision | precision | FP [collation] |
 | daily_counts | app | timezone | timezone | ✔ |
@@ -84,7 +83,6 @@ Baseline: the curated set's hand-written `expect` labels as predictions: precisi
 
 ### Misses and false alarms, with evidence
 
-- **coll_range_count** (rules Q-COLLATION-COMPARE): missed [other]. Observed: other: 1/1 rows differ persistently (still different after recheck) and could not be attributed. predicted [collation] but never observed in 3 runs.
 - **coll_lower_order** (rules Q-COLLATION-ORDER, Q-FUNC-SEMANTICS): predicted [function_semantics] but never observed in 3 runs.
 - **coll_upper_unicode** (rules Q-FUNC-SEMANTICS): predicted [function_semantics] but never observed in 3 runs.
 - **null_order_desc** (rules Q-COLLATION-ORDER, Q-NULL-ORDER): predicted [null_ordering] but never observed in 3 runs.
@@ -94,8 +92,8 @@ Baseline: the curated set's hand-written `expect` labels as predictions: precisi
 - **float_avg_by_wiki** (rules Q-COLLATION-ORDER, Q-FLOAT-AGG): predicted [collation] but never observed in 3 runs.
 - **numeric_division** (rules Q-COLLATION-ORDER): predicted [collation] but never observed in 3 runs.
 - **order_ties_limit** (rules Q-ORDER-TIES): predicted [nondeterministic_order] but never observed in 3 runs.
+- **recent_edits_by_user** (rules Q-ORDER-TIES): predicted [nondeterministic_order] but never observed in 3 runs.
 - **search_titles** (rules Q-COLLATION-ORDER, Q-ORDER-TIES, Q-ILIKE): predicted [nondeterministic_order] but never observed in 3 runs.
-- **feed_offset** (rules Q-ORDER-TIES): predicted [nondeterministic_order] but never observed in 3 runs.
 - **wiki_stats** (rules Q-COLLATION-ORDER, Q-FLOAT-AGG): predicted [collation] but never observed in 3 runs.
 - **editor_labels** (rules Q-CONCAT-NULL): predicted [null_semantics] but never observed in 3 runs.
 - **top_editors** (rules Q-COLLATION-ORDER, Q-NULL-ORDER): predicted [null_ordering] but never observed in 3 runs.

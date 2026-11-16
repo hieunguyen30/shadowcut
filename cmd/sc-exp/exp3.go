@@ -176,7 +176,7 @@ func runHotspot(ctx context.Context, pool *pgxpool.Pool, name string, insert fun
 // recencyByID measures whether "newest rows by id" still means newest rows.
 func recencyByID(ctx context.Context, pool *pgxpool.Pool, table string) float64 {
 	byID := map[string]bool{}
-	rows, err := pool.Query(ctx, fmt.Sprintf(`SELECT id::text FROM %s ORDER BY id DESC LIMIT 20`, table))
+	rows, err := pool.Query(ctx, fmt.Sprintf(`SELECT id::text AS k FROM %s ORDER BY id DESC LIMIT 20`, table))
 	if err != nil {
 		return -1
 	}
@@ -186,7 +186,7 @@ func recencyByID(ctx context.Context, pool *pgxpool.Pool, table string) float64 
 		byID[id] = true
 	}
 	rows.Close()
-	rows, err = pool.Query(ctx, fmt.Sprintf(`SELECT id::text FROM %s ORDER BY created_at DESC LIMIT 20`, table))
+	rows, err = pool.Query(ctx, fmt.Sprintf(`SELECT id::text AS k FROM %s ORDER BY created_at DESC LIMIT 20`, table))
 	if err != nil {
 		return -1
 	}

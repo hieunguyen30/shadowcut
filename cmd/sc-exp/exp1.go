@@ -26,7 +26,7 @@ import (
 )
 
 // environmental categories are not hazards of the query itself; they are not scored.
-var environmental = map[classify.Category]bool{classify.ReplicationLag: true, classify.MissingRow: true, classify.Isolation: true}
+var environmental = map[classify.Category]bool{classify.ReplicationLag: true, classify.MissingRow: true, classify.Isolation: true, classify.Timeout: true}
 
 type exp1Query struct {
 	Name         string              `json:"name"`
@@ -203,6 +203,9 @@ func score(q *exp1Query) {
 		}
 	}
 	for _, o := range q.Observed {
+		if environmental[o] {
+			continue
+		}
 		if !containsCat(q.Predicted, o) {
 			q.FN = append(q.FN, o)
 		}

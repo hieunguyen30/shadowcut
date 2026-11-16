@@ -1,0 +1,44 @@
+[
+  {
+    "strategy": "sequential",
+    "env": "EMULATOR smoke test (functional only; throughput/latency NOT meaningful)",
+    "writers": 4,
+    "seconds": 20.0009338,
+    "commits": 1788,
+    "errors": 0,
+    "retries": 0,
+    "commits_per_sec": 89.39582610887898,
+    "p50_ms": 34.155,
+    "p95_ms": 115.09,
+    "p99_ms": 176.109,
+    "recency_by_id_correct": 0.95
+  },
+  {
+    "strategy": "bit_reversed_sequence",
+    "env": "EMULATOR smoke test (functional only; throughput/latency NOT meaningful)",
+    "writers": 4,
+    "seconds": 20.0009183,
+    "commits": 1706,
+    "errors": 0,
+    "retries": 0,
+    "commits_per_sec": 85.29608363032013,
+    "p50_ms": 37.64,
+    "p95_ms": 116.572,
+    "p99_ms": 169.449,
+    "recency_by_id_correct": 0
+  },
+  {
+    "strategy": "uuid_v4",
+    "env": "EMULATOR smoke test (functional only; throughput/latency NOT meaningful)",
+    "writers": 4,
+    "seconds": 20.0003733,
+    "commits": 1688,
+    "errors": 0,
+    "retries": 0,
+    "commits_per_sec": 84.39842470340291,
+    "p50_ms": 36.907,
+    "p95_ms": 120.93,
+    "p99_ms": 178.297,
+    "recency_by_id_correct": 0
+  }
+]

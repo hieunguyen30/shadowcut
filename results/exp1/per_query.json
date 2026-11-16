@@ -15,7 +15,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "collation: text sort key \"4000 Hipparchus\" vs \"\\\"Dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+      "collation: text sort key \"2008 United States House of Representatives elections in ...\" vs \"\\\"Dragons\\\" armchair\": PostgreSQL's linguistic collation..."
     ]
   },
   {
@@ -35,7 +35,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "collation: last_title: max() over text returns \"Torre d'os Urreya\" vs \"Torre de Sant Per de Calanda\": the engines order strings differently; last_ti..."
+      "collation: last_title: max() over text returns \"نقاش المستخدم:اثر الأقدمين\" vs \"نقاش:القرآن الكريم (بالرسم الإملائي)/النص المشكول\": the engines orde..."
     ]
   },
   {
@@ -49,12 +49,12 @@
       "Q-COLLATION-COMPARE"
     ],
     "observed": [
-      "other"
+      "collation"
     ],
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "other: 1/1 rows differ persistently (still different after recheck) and could not be attributed"
+      "collation: the statement compares a column with a text value using \u003c, \u003e, or BETWEEN; the engines evaluate that range under different collations, so ..."
     ]
   },
   {
@@ -75,7 +75,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "collation: text sort key \"2026–27 australian region cyclone season\" vs \"\\\"dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-..."
+      "collation: text sort key \"1944 german football championship\" vs \"\\\"dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point o..."
     ]
   },
   {
@@ -94,7 +94,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "collation: titles: string_agg() over text returns \"180° Berlin | 1. Badminton-Bundesliga | 1. FC Kaiserslaut...\" vs \"1. Badminton-Bundesliga | 1. FC..."
+      "collation: titles: string_agg() over text returns \"103rd Regiment of Foot (Royal Bombay Fusiliers) | 10 Huds...\" vs \"1. Badminton-Bundesliga | 1. FC..."
     ]
   },
   {
@@ -153,7 +153,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "collation: text sort key \"列维劳德\" vs \"대구버스매니아\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+      "collation: text sort key \"高晶\" vs \"하늘이푸른날\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
     ]
   },
   {
@@ -356,7 +356,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "precision: s: 108203.99822816972 vs 108203.99822816973 (relative difference 1.3e-16)"
+      "precision: s: 397241.6106328055 vs 397241.6106328576 (relative difference 1.3e-13)"
     ]
   },
   {
@@ -377,7 +377,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "precision: g: 1.0269600292310224 vs 1.0269600292310221 (relative difference 2.2e-16); g: 1.0121692563862206 vs 1.0121692563862204 (relative differen..."
+      "precision: g: 0.9450261343116846 vs 0.945026134311685 (relative difference 4.7e-16); g: 1.477840562231837 vs 1.4778405622318367 (relative difference..."
     ]
   },
   {
@@ -400,9 +400,14 @@
     "rules": [
       "Q-COLLATION-ORDER"
     ],
-    "observed": null,
+    "observed": [
+      "timeout"
+    ],
     "runs": 3,
-    "mismatched_runs": 0
+    "mismatched_runs": 3,
+    "reasons": [
+      "timeout: Spanner shadow query timed out: timeout: context deadline exceeded"
+    ]
   },
   {
     "name": "int_avg_control",
@@ -789,14 +794,9 @@
     "rules": [
       "Q-ORDER-TIES"
     ],
-    "observed": [
-      "nondeterministic_order"
-    ],
+    "observed": null,
     "runs": 3,
-    "mismatched_runs": 3,
-    "reasons": [
-      "nondeterministic_order: rows tie on every ORDER BY key; each engine broke the tie differently (order)"
-    ]
+    "mismatched_runs": 0
   },
   {
     "name": "edits_in_range",
@@ -864,9 +864,14 @@
     "rules": [
       "Q-ORDER-TIES"
     ],
-    "observed": null,
+    "observed": [
+      "nondeterministic_order"
+    ],
     "runs": 3,
-    "mismatched_runs": 0
+    "mismatched_runs": 3,
+    "reasons": [
+      "nondeterministic_order: rows tie on every ORDER BY key; each engine broke the tie differently (order)"
+    ]
   },
   {
     "name": "pages_alpha",
@@ -884,7 +889,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "collation: text sort key \"Manichaeism\" vs \"M Countdown\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+      "collation: text sort key \"Macarius Simeomo\" vs \"M Countdown\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
     ]
   },
   {
@@ -904,7 +909,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "precision: avg_growth: 1.9150192545796603 vs 1.91501925457966 (relative difference 1.2e-16); sum_growth: 42731.73964669054 vs 42731.739646690534 (re..."
+      "precision: avg_growth: 1.1202709669225168 vs 1.1202709669225144 (relative difference 2.2e-15); sum_growth: 99036.43455981818 vs 99036.43455981796 (r..."
     ]
   },
   {
@@ -955,7 +960,7 @@
     "runs": 3,
     "mismatched_runs": 3,
     "reasons": [
-      "collation: text sort key \"레스터기타\" vs \"B.NIROSHAN\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+      "collation: text sort key \"레스터기타\" vs \".nhals8\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
     ]
   },
   {

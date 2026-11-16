@@ -4,7 +4,7 @@
     "category": "collation",
     "sql": "SELECT title FROM pages WHERE wiki = 'enwiki' ORDER BY title LIMIT 200",
     "explanation": {
-      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"4000 Hipparchus\" vs \"\\\"Dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"2008 United States House of Representatives elections in ...\" vs \"\\\"Dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
       "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },
@@ -17,7 +17,7 @@
     "category": "collation",
     "sql": "SELECT wiki, min(title) AS first_title, max(title) AS last_title FROM pages GROUP BY wiki ORDER BY wiki",
     "explanation": {
-      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: last_title: max() over text returns \"Torre d'os Urreya\" vs \"Torre de Sant Per de Calanda\": the engines order strings differently; last_title: max() over text returns \"Vikipediya:İstifadəçi hüquqları üçün müraciətlər\" vs \"İstifadəçi:ArxivBot/konfiqurasiya/doc\": the engines order strings differently; first_title: min() over text returns \"ballistite\" vs \"EARPHONE\": the engines order strings differently",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: last_title: max() over text returns \"نقاش المستخدم:اثر الأقدمين\" vs \"نقاش:القرآن الكريم (بالرسم الإملائي)/النص المشكول\": the engines order strings differently; first_title: min() over text returns \"لمداكرة د لخدايمي:~2026-60324-60\" vs \"لمداكرة د لخدايمي:SoufianeNaoum\": the engines order strings differently; last_title: max() over text returns \"ماكسويل كونادو\" vs \"چوشوا تيچانى\": the engines order strings differently",
       "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },
@@ -27,11 +27,11 @@
   },
   {
     "name": "coll_range_count",
-    "category": "other",
+    "category": "collation",
     "sql": "SELECT count(*) AS n FROM pages WHERE title \u003e 'M'",
     "explanation": {
-      "summary": "Mismatch classified as other. Evidence: 1/1 rows differ persistently (still different after recheck) and could not be attributed",
-      "fix": "Inspect the differing rows in the mismatch log; no automatic rewrite is known.",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: the statement compares a column with a text value using \u003c, \u003e, or BETWEEN; the engines evaluate that range under different collations, so different rows qualify",
+      "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },
     "evaluated": false,
@@ -43,7 +43,7 @@
     "category": "collation",
     "sql": "SELECT lower(title) AS t FROM pages WHERE wiki = 'enwiki' ORDER BY t LIMIT 100",
     "explanation": {
-      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"2026–27 australian region cyclone season\" vs \"\\\"dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"1944 german football championship\" vs \"\\\"dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
       "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },
@@ -56,7 +56,7 @@
     "category": "collation",
     "sql": "SELECT wiki, string_agg(title, ' | ' ORDER BY title) AS titles FROM pages WHERE wiki IN ('dewiki', 'frwiki') GROUP BY wiki ORDER BY wiki",
     "explanation": {
-      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: titles: string_agg() over text returns \"180° Berlin | 1. Badminton-Bundesliga | 1. FC Kaiserslaut...\" vs \"1. Badminton-Bundesliga | 1. FC Kaiserslautern | 180° Ber...\": the engines order strings differently; titles: string_agg() over text returns \"1814 en arts plastiques | 1884 en arts plastiques | 1963 ...\" vs \"(7) Iris | 1814 en arts plastiques | 1884 en arts plastiq...\": the engines order strings differently",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: titles: string_agg() over text returns \"103rd Regiment of Foot (Royal Bombay Fusiliers) | 10 Huds...\" vs \"1. Badminton-Bundesliga | 1. FC Kaiserslautern | 1. Münch...\": the engines order strings differently; titles: string_agg() over text returns \"10 brumaire | 10 nivôse | 10 thermidor | 10 vendémiaire |...\" vs \"(117713) Kövesligethy | (13030) 1989 PF | (13773) 1998 TY...\": the engines order strings differently",
       "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },
@@ -82,7 +82,7 @@
     "category": "collation",
     "sql": "SELECT DISTINCT user_name FROM edits WHERE wiki = 'wikidatawiki' ORDER BY user_name DESC LIMIT 5",
     "explanation": {
-      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"列维劳德\" vs \"대구버스매니아\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"高晶\" vs \"하늘이푸른날\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
       "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },
@@ -141,7 +141,7 @@
       "model": "mock-rules-v1"
     },
     "evaluated": true,
-    "parity": false,
+    "parity": true,
     "preserved": null
   },
   {
@@ -175,7 +175,7 @@
     "category": "precision",
     "sql": "SELECT sum(growth_ratio) AS s FROM edits",
     "explanation": {
-      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: s: 108203.99822816972 vs 108203.99822816973 (relative difference 1.3e-16)",
+      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: s: 397241.6106328055 vs 397241.6106328576 (relative difference 1.3e-13)",
       "fix": "Use numeric for values that are compared exactly, or round results before comparing/displaying.",
       "model": "mock-rules-v1"
     },
@@ -188,8 +188,21 @@
     "category": "precision",
     "sql": "SELECT wiki, avg(growth_ratio) AS g FROM edits GROUP BY wiki ORDER BY wiki",
     "explanation": {
-      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: g: 1.0269600292310224 vs 1.0269600292310221 (relative difference 2.2e-16); g: 1.0121692563862206 vs 1.0121692563862204 (relative difference 2.2e-16); g: 1.9150192545796603 vs 1.91501925457966 (relative difference 1.2e-16)",
+      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: g: 0.9450261343116846 vs 0.945026134311685 (relative difference 4.7e-16); g: 1.477840562231837 vs 1.4778405622318367 (relative difference 1.5e-16); g: 1.9585993604480925 vs 1.9585993604480922 (relative difference 1.1e-16)",
       "fix": "Use numeric for values that are compared exactly, or round results before comparing/displaying.",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": false,
+    "parity": false,
+    "preserved": null
+  },
+  {
+    "name": "numeric_division",
+    "category": "timeout",
+    "sql": "SELECT wiki, title, bytes::numeric / 3 AS third FROM pages WHERE bytes IS NOT NULL ORDER BY wiki, title LIMIT 50",
+    "explanation": {
+      "summary": "Mismatch classified as timeout. Evidence: Spanner shadow query timed out: timeout: context deadline exceeded",
+      "fix": "Inspect the differing rows in the mismatch log; no automatic rewrite is known.",
       "model": "mock-rules-v1"
     },
     "evaluated": false,
@@ -203,13 +216,12 @@
     "explanation": {
       "summary": "ORDER BY does not determine a unique order. When ORDER BY keys tie, the order among tied rows is unspecified; the two engines break ties differently, and with LIMIT they return different rows. Evidence: LIMIT without ORDER BY: each engine may return any qualifying rows",
       "fix": "Append a unique column (the primary key) as a final tiebreaker.",
-      "fixed_sql": "SELECT id, wiki FROM editsORDER BY id\nLIMIT 10",
+      "fixed_sql": "SELECT id, wiki FROM edits ORDER BY id\nLIMIT 10",
       "model": "mock-rules-v1"
     },
     "evaluated": true,
-    "parity": false,
-    "preserved": null,
-    "fix_error": "syntax error at or near \"id\" (SQLSTATE 42601) syntax error at or near \"id\""
+    "parity": true,
+    "preserved": null
   },
   {
     "name": "gh_repo_ties",
@@ -274,7 +286,7 @@
       "model": "mock-rules-v1"
     },
     "evaluated": true,
-    "parity": false,
+    "parity": true,
     "preserved": true
   },
   {
@@ -379,21 +391,7 @@
       "model": "mock-rules-v1"
     },
     "evaluated": true,
-    "parity": false,
-    "preserved": null
-  },
-  {
-    "name": "recent_edits_by_user",
-    "category": "nondeterministic_order",
-    "sql": "SELECT id, wiki, page_title, size_delta, edit_ts\nFROM edits\nWHERE user_name = $1\nORDER BY edit_ts DESC\nLIMIT 50",
-    "explanation": {
-      "summary": "ORDER BY does not determine a unique order. When ORDER BY keys tie, the order among tied rows is unspecified; the two engines break ties differently, and with LIMIT they return different rows. Evidence: rows tie on every ORDER BY key; each engine broke the tie differently (order)",
-      "fix": "Append a unique column (the primary key) as a final tiebreaker.",
-      "fixed_sql": "SELECT id, wiki, page_title, size_delta, edit_ts\nFROM edits\nWHERE user_name = $1\nORDER BY edit_ts DESC, id\nLIMIT 50",
-      "model": "mock-rules-v1"
-    },
-    "evaluated": true,
-    "parity": false,
+    "parity": true,
     "preserved": null
   },
   {
@@ -424,11 +422,25 @@
     "preserved": true
   },
   {
+    "name": "feed_offset",
+    "category": "nondeterministic_order",
+    "sql": "SELECT id, wiki, page_title, edit_ts\nFROM edits\nORDER BY edit_ts DESC\nLIMIT 25 OFFSET $1",
+    "explanation": {
+      "summary": "ORDER BY does not determine a unique order. When ORDER BY keys tie, the order among tied rows is unspecified; the two engines break ties differently, and with LIMIT they return different rows. Evidence: rows tie on every ORDER BY key; each engine broke the tie differently (order)",
+      "fix": "Append a unique column (the primary key) as a final tiebreaker.",
+      "fixed_sql": "SELECT id, wiki, page_title, edit_ts\nFROM edits\nORDER BY edit_ts DESC, id\nLIMIT 25 OFFSET $1",
+      "model": "mock-rules-v1"
+    },
+    "evaluated": true,
+    "parity": true,
+    "preserved": null
+  },
+  {
     "name": "pages_alpha",
     "category": "collation",
     "sql": "SELECT title, edit_count\nFROM pages\nWHERE wiki = $1 AND title \u003e $2\nORDER BY title\nLIMIT 50",
     "explanation": {
-      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"Manichaeism\" vs \"M Countdown\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"Macarius Simeomo\" vs \"M Countdown\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
       "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },
@@ -441,7 +453,7 @@
     "category": "precision",
     "sql": "SELECT wiki, count(*) AS edits, avg(size_delta) AS avg_delta, avg(growth_ratio) AS avg_growth, sum(growth_ratio) AS sum_growth\nFROM edits\nGROUP BY wiki\nORDER BY edits DESC, wiki",
     "explanation": {
-      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: avg_growth: 1.9150192545796603 vs 1.91501925457966 (relative difference 1.2e-16); sum_growth: 42731.73964669054 vs 42731.739646690534 (relative difference 1.7e-16); avg_growth: 1.0269600292310224 vs 1.0269600292310221 (relative difference 2.2e-16)",
+      "summary": "sum/avg over floating-point columns. Floating-point addition is not associative; distributed aggregation adds in a different order, changing the last digits (observed: 1.0274024412846794 vs 1.0274024412846792). Evidence: avg_growth: 1.1202709669225168 vs 1.1202709669225144 (relative difference 2.2e-15); sum_growth: 99036.43455981818 vs 99036.43455981796 (relative difference 2.2e-15); avg_growth: 1.9304544306977025 vs 1.930454430697696 (relative difference 3.3e-15)",
       "fix": "Use numeric for values that are compared exactly, or round results before comparing/displaying.",
       "model": "mock-rules-v1"
     },
@@ -460,7 +472,7 @@
       "model": "mock-rules-v1"
     },
     "evaluated": true,
-    "parity": false,
+    "parity": true,
     "preserved": null
   },
   {
@@ -468,7 +480,7 @@
     "category": "collation",
     "sql": "SELECT user_name, count(*) AS edits\nFROM edits\nWHERE wiki = $1\nGROUP BY user_name\nORDER BY user_name\nLIMIT 100",
     "explanation": {
-      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"레스터기타\" vs \"B.NIROSHAN\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
+      "summary": "ORDER BY on text uses a different collation. PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Evidence: text sort key \"레스터기타\" vs \".nhals8\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)",
       "fix": "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",
       "model": "mock-rules-v1"
     },

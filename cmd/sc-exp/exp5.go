@@ -54,7 +54,7 @@ type exp5Rate struct {
 func exp5Cmd() *cobra.Command {
 	var rates []float64
 	var trials, inject, maxRounds int
-	var table, out string
+	var table, column, out string
 	var maxTime time.Duration
 	c := &cobra.Command{
 		Use:   "exp5",
@@ -86,7 +86,7 @@ func exp5Cmd() *cobra.Command {
 				var firsts, alls, rounds, rows []float64
 				var perRound, roundMs []float64
 				for trial := 1; trial <= trials; trial++ {
-					keys, restore, err := injectDrift(ctx, pg, sp, table, inject)
+					keys, restore, err := injectDrift(ctx, pg, sp, table, column, inject)
 					if err != nil {
 						return err
 					}
@@ -155,15 +155,21 @@ func exp5Cmd() *cobra.Command {
 	c.Flags().IntVar(&inject, "inject", 20, "drifted rows injected per trial")
 	c.Flags().IntVar(&maxRounds, "max-rounds", 400, "max rounds per trial")
 	c.Flags().DurationVar(&maxTime, "max-time", 5*time.Minute, "max time per trial")
-	c.Flags().StringVar(&table, "table", "edits", "table to drift and verify")
+	c.Flags().StringVar(&table, "table", "gh_events", "table to drift and verify (needs a bigint id key)")
+	c.Flags().StringVar(&column, "column", "actor_login", "text column to corrupt")
 	c.Flags().StringVar(&out, "out", "results/exp5", "output directory")
 	return c
 }
 
 // injectDrift corrupts n random rows directly in Spanner (bypassing CDC) and
 // returns their verifier keys plus a restore function.
-func injectDrift(ctx context.Context, pg, sp *pgxpool.Pool, table string, n int) (map[string]bool, func(), error) {
-	rows, err := pg.Query(ctx, fmt.Sprintf(`SELECT id, comment FROM %s TABLESAMPLE BERNOULLI (5) WHERE ingested_at < now() - interval '2 minutes' LIMIT %d`, pgx.Identifier{table}.Sanitize(), n*5))
+func injectDrift(ctx context.Context, pg, sp *pgxpool.Pool, table, column string, n int) (map[string]bool, func(), error) {
+	filter := ""
+	if table == "edits" {
+		filter = "WHERE ingested_at < now() - interval '2 minutes'" // settled rows only
+	}
+	col := pgx.Identifier{column}.Sanitize()
+	rows, err := pg.Query(ctx, fmt.Sprintf(`SELECT id, %s::text FROM %s TABLESAMPLE BERNOULLI (5) %s LIMIT %d`, col, pgx.Identifier{table}.Sanitize(), filter, n*5))
 	if err != nil {
 		return nil, nil, err
 	}
@@ -187,14 +193,14 @@ func injectDrift(ctx context.Context, pg, sp *pgxpool.Pool, table string, n int)
 	}
 	keys := map[string]bool{}
 	for _, c := range cands {
-		if _, err := sp.Exec(ctx, fmt.Sprintf(`UPDATE %s SET comment = $1 WHERE id = $2`, pgx.Identifier{table}.Sanitize()), "drift-"+strconv.FormatInt(c.id, 10), c.id); err != nil {
+		if _, err := sp.Exec(ctx, fmt.Sprintf(`UPDATE %s SET %s = $1 WHERE id = $2`, pgx.Identifier{table}.Sanitize(), col), "drift-"+strconv.FormatInt(c.id, 10), c.id); err != nil {
 			return nil, nil, err
 		}
 		keys[rowset.RowKey(rowset.Row{rowset.Normalize(c.id)})] = true
 	}
 	restore := func() {
 		for _, c := range cands {
-			_, _ = sp.Exec(context.Background(), fmt.Sprintf(`UPDATE %s SET comment = $1 WHERE id = $2`, pgx.Identifier{table}.Sanitize()), c.comment, c.id)
+			_, _ = sp.Exec(context.Background(), fmt.Sprintf(`UPDATE %s SET %s = $1 WHERE id = $2`, pgx.Identifier{table}.Sanitize(), col), c.comment, c.id)
 		}
 	}
 	return keys, restore, nil

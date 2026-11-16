@@ -1,0 +1,11 @@
+1/6 stop applier
+2/6 restart emulator + PGAdapter
+3/6 apply schema
+4/6 rewind consumer group (waiting for it to become empty)
+5/6 replay 688891 records
+    replayed in 140s
+6/6 row counts (postgres vs spanner)
+    edits: 291891 vs 291903
+    pages: 222501 vs 222517
+    gh_events: 40000 vs 40000
+    probe_events: 58202 vs 58202

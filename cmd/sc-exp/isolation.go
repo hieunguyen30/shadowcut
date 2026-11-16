@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log/slog"
 	"os"
@@ -11,6 +10,7 @@ import (
 	"sync/atomic"
 	"time"
 
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel/metric/noop"
 
@@ -36,7 +36,7 @@ type isoResult struct {
 
 func isolationCmd() *cobra.Command {
 	var workers, ops int
-	var pauseApplier bool
+	var spDSN string
 	var out string
 	c := &cobra.Command{
 		Use:   "isolation",
@@ -48,32 +48,27 @@ func isolationCmd() *cobra.Command {
 				return err
 			}
 			defer pg.Close()
-			sp, err := pgutil.Connect(ctx, pgutil.DefaultSpanner(), int32(workers+4))
+			sp, err := pgutil.Connect(ctx, spDSN, int32(workers+4))
 			if err != nil {
 				return err
 			}
 			defer sp.Close()
 			title := fmt.Sprintf("Isolation probe %d", time.Now().Unix())
-			// seed in Postgres; CDC delivers the row to Spanner
-			if _, err := pg.Exec(ctx, `INSERT INTO pages (wiki, title, edit_count, last_edit_ts) VALUES ('isowiki', $1, 0, now())`, title); err != nil {
-				return fmt.Errorf("seed: %w", err)
-			}
-			for deadline := time.Now().Add(time.Minute); ; {
-				var n int64
-				_ = sp.QueryRow(ctx, `SELECT count(*) FROM pages WHERE wiki = 'isowiki' AND title = $1`, title).Scan(&n)
-				if n == 1 {
-					break
+			// The Spanner variants use a separate emulator database (PGAdapter creates it)
+			// so they never compete with the CDC applier for the emulator's single
+			// read-write transaction slot (docs/BUGS.md BUG-009). Both sides are seeded directly.
+			for _, ddl := range []string{
+				`CREATE TABLE pages (wiki varchar(64) NOT NULL, title text NOT NULL, edit_count bigint NOT NULL, bytes bigint, avg_delta numeric, last_editor text, last_edit_ts timestamptz NOT NULL, PRIMARY KEY (wiki, title))`,
+				`CREATE TABLE sc_reverse_journal (id varchar(36) NOT NULL, tbl varchar(64) NOT NULL, row_data jsonb NOT NULL, created_at spanner.commit_timestamp NOT NULL, PRIMARY KEY (id))`,
+			} {
+				if _, err := sp.Exec(ctx, ddl); err != nil && !strings.Contains(err.Error(), "exists") && !strings.Contains(err.Error(), "uplicate") {
+					return fmt.Errorf("isolation db: %w", err)
 				}
-				if time.Now().After(deadline) {
-					return fmt.Errorf("seed row did not replicate to Spanner")
-				}
-				time.Sleep(500 * time.Millisecond)
 			}
-			if pauseApplier {
-				// Emulator-only workaround: one read-write transaction at a time, and the
-				// applier's heartbeat transactions starve the Spanner variants.
-				_ = docker("stop", "shadowcut-applier-1")(ctx)
-				defer docker("start", "shadowcut-applier-1")(context.Background())
+			for _, p := range []*pgxpool.Pool{pg, sp} {
+				if _, err := p.Exec(ctx, `INSERT INTO pages (wiki, title, edit_count, last_edit_ts) VALUES ('isowiki', $1, 0, now())`, title); err != nil {
+					return fmt.Errorf("seed: %w", err)
+				}
 			}
 			var results []isoResult
 			for _, v := range []struct {
@@ -146,7 +141,7 @@ func isolationCmd() *cobra.Command {
 		},
 	}
 	c.Flags().IntVar(&workers, "workers", 16, "concurrent workers")
-	c.Flags().BoolVar(&pauseApplier, "pause-applier", true, "pause the CDC applier during the run (emulator single-RW-transaction workaround)")
+	c.Flags().StringVar(&spDSN, "spanner", "postgres://localhost:15433/isolation?sslmode=disable", "Spanner (PGAdapter) DSN; a separate database avoids contention with the CDC applier")
 	c.Flags().IntVar(&ops, "ops", 25, "increments per worker")
 	c.Flags().StringVar(&out, "out", "results/isolation", "output directory")
 	return c

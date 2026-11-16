@@ -182,3 +182,14 @@ func TestEvidenceLoaded(t *testing.T) {
 		t.Fatalf("unexpected evidence for concat/concat_ws")
 	}
 }
+
+func TestOrderBySequentialKey(t *testing.T) {
+	got := rules(scanOne(t, "SELECT id, wiki FROM edits ORDER BY id DESC LIMIT 50"))
+	if !got["Q-ORDER-BY-SEQ-KEY"] {
+		t.Fatalf("missing Q-ORDER-BY-SEQ-KEY: %v", got)
+	}
+	got = rules(scanOne(t, "SELECT id FROM edits ORDER BY edit_ts DESC, id DESC LIMIT 50"))
+	if got["Q-ORDER-BY-SEQ-KEY"] {
+		t.Fatal("tiebreaker use of the key should not trigger")
+	}
+}

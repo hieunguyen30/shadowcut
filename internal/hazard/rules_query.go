@@ -169,7 +169,7 @@ func (s *Scanner) queryRules(st sqlscan.Statement, info sqlscan.Info) []Finding 
 
 	// ---- ORDER BY: collation, NULL ordering ---------------------------------
 	for _, items := range orderByClauses(toks) {
-		for _, raw := range items {
+		for ii, raw := range items {
 			expr, explicitNulls := trimOrderModifiers(raw)
 			if len(expr) == 0 {
 				continue
@@ -180,6 +180,11 @@ func (s *Scanner) queryRules(st sqlscan.Statement, info sqlscan.Info) []Finding 
 				fmt.Sscan(expr[0].Text, &n)
 				if n >= 1 && n <= len(info.Select) {
 					expr = stripAlias(info.Select[n-1])
+				}
+			}
+			if ii == 0 && len(expr) == 1 && expr[0].IsIdent() {
+				if c := sc.col(expr[0].Text); c != nil && c.Identity {
+					out = append(out, finding("Q-ORDER-BY-SEQ-KEY", raw[0], fmt.Sprintf("ORDER BY %s: %s is a %s key; recency order breaks once keys are bit-reversed or UUIDs", sqlscan.TokensText(raw), c.Name, c.TypeRaw)))
 				}
 			}
 			if sc.exprIsText(expr, info) {

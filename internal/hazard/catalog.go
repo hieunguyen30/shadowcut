@@ -98,6 +98,10 @@ var Catalog = []Rule{
 		Fix:     "Rename the object.",
 		Sources: []string{"experiment: docs/BUGS.md BUG-002"}},
 	// ---- query: ordering / collation ---------------------------------------
+	{ID: "Q-ORDER-BY-SEQ-KEY", Title: "ORDER BY a sequential key used as \"newest first\"", Severity: Medium, Area: "ordering",
+		Explain: "Ordering by a serial/identity key only means insertion order while keys are sequential. The recommended Spanner fix for SC-SEQ-KEY (bit-reversed sequences or UUIDv4) breaks it: in Experiment 3's smoke test, ORDER BY id DESC LIMIT 20 returned the newest rows 95% of the time with sequential keys and 0% with bit-reversed or UUID keys.",
+		Fix:     "Order by a timestamp column (with the key as a tiebreaker) for recency; keep the key only for identity.",
+		Sources: []string{"experiment: results/exp3-emulator-smoke", DocPKDefault}},
 	{ID: "Q-COLLATION-ORDER", Title: "ORDER BY on text uses a different collation", Severity: High, Area: "collation", Predicts: classify.Collation,
 		Explain: "PostgreSQL sorts text with the database collation (en_US.UTF-8 here: case- and accent-aware, punctuation ignored at first level). Spanner sorts by Unicode code point (probe: 'Banana, Zebra, _under, apple, straße, éclair' vs 'apple, Banana, éclair, straße, _under, Zebra'). Page boundaries (LIMIT/keyset) select different rows.",
 		Fix:     "Sort on a normalized key computed identically on both sides (e.g. a stored sort_key column), or accept code-point order and update tests; COLLATE is not supported on Spanner.",

@@ -1,0 +1,43 @@
+{
+  "env": "local Docker: PostgreSQL 16 vs Cloud Spanner emulator + PGAdapter (EMULATOR, not real Spanner)",
+  "results": [
+    {
+      "variant": "postgres_read_committed",
+      "workers": 8,
+      "ops_per_worker": 3,
+      "succeeded": 24,
+      "failed": 0,
+      "retries": 0,
+      "expected_increment": 24,
+      "actual_increment": 5,
+      "lost_updates": 19,
+      "seconds": 0.1217303
+    },
+    {
+      "variant": "spanner_with_retry",
+      "workers": 8,
+      "ops_per_worker": 3,
+      "succeeded": 17,
+      "failed": 7,
+      "retries": 86,
+      "expected_increment": 17,
+      "actual_increment": 17,
+      "lost_updates": 0,
+      "seconds": 24.5040103,
+      "error_sample": "The transaction was aborted and could not be retried due to a concurrent modification (SQLSTATE 40001)"
+    },
+    {
+      "variant": "spanner_no_retry",
+      "workers": 8,
+      "ops_per_worker": 3,
+      "succeeded": 2,
+      "failed": 22,
+      "retries": 0,
+      "expected_increment": 2,
+      "actual_increment": 2,
+      "lost_updates": 0,
+      "seconds": 4.7109997,
+      "error_sample": "The transaction was aborted and could not be retried due to a concurrent modification (SQLSTATE 40001)"
+    }
+  ]
+}

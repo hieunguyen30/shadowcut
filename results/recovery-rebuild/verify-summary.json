@@ -1,0 +1,10 @@
+{
+  "updated_at": "2026-11-16T12:43:59.0191137Z",
+  "sample_rate": 0.05,
+  "rounds": 1,
+  "rows_compared": 8088,
+  "drift_total": 0,
+  "open_drift": null,
+  "last_round_start": "2026-11-16T12:43:37.1466467Z",
+  "last_round_ms": 21872
+}
