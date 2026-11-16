@@ -256,7 +256,29 @@ func (e *Engine) recheck(ctx context.Context, j Job, mode compare.Mode) compare.
 	case <-time.After(e.cfg.RecheckAfter):
 	}
 	s := Exec(ctx, e.SP, j.SQL, spannerArgs(j.Args), false, e.cfg.ShadowTimeout)
-	return compare.Compare(p, s, mode)
+	if d := compare.Compare(p, s, mode); d.Equal() {
+		return d
+	}
+	// Bracket: read Postgres again. If the Spanner result lies between the two
+	// Postgres reads, the source simply changed during the comparison (churn).
+	p2 := Exec(ctx, e.PG, j.SQL, j.Args, false, e.cfg.ShadowTimeout)
+	d := compare.Compare(p2, s, mode)
+	if d.Equal() {
+		return d
+	}
+	info := sqlscan.Analyze(sqlscan.Lex(j.SQL))
+	bracketed := compare.BracketedStable(p, s, p2)
+	if info.HasLimit {
+		bracketed = compare.Bracketed(p, s, p2)
+		// "newest N" windows under continuous inserts slide between the reads
+		if !bracketed && len(info.OrderBy) > 0 {
+			bracketed = compare.WindowShift(p, s, p2, firstSortColumn(info, p.Columns))
+		}
+	}
+	if bracketed && !(compare.Compare(p, p2, compare.Unordered).Equal()) {
+		return compare.Diff{Kind: compare.Same}
+	}
+	return d
 }
 
 func samples(p, s *rowset.Result, d compare.Diff) (sp, ss []rowset.Row) {
@@ -491,19 +513,37 @@ func NamesFromSQL(srcs ...string) map[string]string {
 const SpannerDefaultTZ = "America/Los_Angeles"
 
 func (e *Engine) tzCounterfactual(ctx context.Context, j Job, shadow *rowset.Result, mode compare.Mode) bool {
+	q1 := e.execInTZ(ctx, j)
+	if q1 == nil {
+		return false
+	}
+	if compare.Compare(q1, shadow, mode).Equal() {
+		return true
+	}
+	// live data: bracket a fresh Spanner read between two counterfactual reads
+	s2 := Exec(ctx, e.SP, j.SQL, spannerArgs(j.Args), false, e.cfg.ShadowTimeout)
+	q2 := e.execInTZ(ctx, j)
+	if q2 == nil {
+		return false
+	}
+	return compare.Compare(q2, s2, mode).Equal() || (!compare.Compare(q1, q2, compare.Unordered).Equal() && compare.Bracketed(q1, s2, q2))
+}
+
+// execInTZ runs the job on Postgres with the session time zone set to Spanner's default.
+func (e *Engine) execInTZ(ctx context.Context, j Job) *rowset.Result {
 	cctx, cancel := context.WithTimeout(ctx, e.cfg.ShadowTimeout)
 	defer cancel()
 	tx, err := e.PG.Begin(cctx)
 	if err != nil {
-		return false
+		return nil
 	}
 	defer tx.Rollback(cctx)
 	if _, err := tx.Exec(cctx, "SET LOCAL TIME ZONE '"+SpannerDefaultTZ+"'"); err != nil {
-		return false
+		return nil
 	}
 	rows, err := tx.Query(cctx, j.SQL, j.Args...)
 	if err != nil {
-		return false
+		return nil
 	}
 	res := &rowset.Result{}
 	for _, f := range rows.FieldDescriptions() {
@@ -513,7 +553,7 @@ func (e *Engine) tzCounterfactual(ctx context.Context, j Job, shadow *rowset.Res
 		vals, err := rows.Values()
 		if err != nil {
 			rows.Close()
-			return false
+			return nil
 		}
 		r := make(rowset.Row, len(vals))
 		for i, v := range vals {
@@ -523,7 +563,26 @@ func (e *Engine) tzCounterfactual(ctx context.Context, j Job, shadow *rowset.Res
 	}
 	rows.Close()
 	if rows.Err() != nil {
-		return false
+		return nil
 	}
-	return compare.Compare(res, shadow, mode).Equal()
+	return res
+}
+
+// firstSortColumn maps the first ORDER BY item to a result column index (-1 if unknown).
+func firstSortColumn(info sqlscan.Info, cols []rowset.Column) int {
+	if len(info.OrderBy) == 0 {
+		return -1
+	}
+	it := info.OrderBy[0]
+	if it.ResultIndex >= 0 {
+		return it.ResultIndex
+	}
+	if len(it.Columns) == 1 {
+		for i, c := range cols {
+			if strings.EqualFold(c.Name, it.Columns[0]) {
+				return i
+			}
+		}
+	}
+	return -1
 }

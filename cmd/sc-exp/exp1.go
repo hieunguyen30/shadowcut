@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"go.opentelemetry.io/otel/metric/noop"
 
+	"github.com/shadowcut/shadowcut/internal/cdc"
 	"github.com/shadowcut/shadowcut/internal/chart"
 	"github.com/shadowcut/shadowcut/internal/classify"
 	"github.com/shadowcut/shadowcut/internal/hazard"
@@ -28,26 +29,39 @@ import (
 var environmental = map[classify.Category]bool{classify.ReplicationLag: true, classify.MissingRow: true, classify.Isolation: true}
 
 type exp1Query struct {
-	Name       string              `json:"name"`
-	Source     string              `json:"source"` // curated | app
-	Expect     string              `json:"expect,omitempty"`
-	Predicted  []classify.Category `json:"predicted"`
-	Rules      []string            `json:"rules"`
-	Observed   []classify.Category `json:"observed"`
-	Runs       int                 `json:"runs"`
-	Mismatch   int                 `json:"mismatched_runs"`
-	Reasons    []string            `json:"reasons,omitempty"`
-	TP, FP, FN []classify.Category `json:"-"`
+	Name         string              `json:"name"`
+	Source       string              `json:"source"` // curated | app
+	Expect       string              `json:"expect,omitempty"`
+	Predicted    []classify.Category `json:"predicted"`
+	Rules        []string            `json:"rules"`
+	Observed     []classify.Category `json:"observed"`
+	Runs         int                 `json:"runs"`
+	Mismatch     int                 `json:"mismatched_runs"`
+	Reasons      []string            `json:"reasons,omitempty"`
+	TP, FP, FN   []classify.Category `json:"-"`
+	Unobservable []classify.Category `json:"unobservable,omitempty"`
 }
 
 func exp1Cmd() *cobra.Command {
 	var runs int
 	var gap time.Duration
 	var out string
+	var quiesce, rescore bool
 	c := &cobra.Command{
 		Use:   "exp1",
 		Short: "Experiment 1: scanner precision/recall vs mismatches observed by shadow replay",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if rescore {
+				var qs []*exp1Query
+				if err := state.ReadJSON(filepath.Join(out, "per_query.json"), &qs); err != nil {
+					return err
+				}
+				for _, q := range qs {
+					score(q)
+				}
+				_ = state.WriteJSON(filepath.Join(out, "per_query.json"), qs)
+				return exp1Report(out, qs, qs[0].Runs)
+			}
 			ctx := cmd.Context()
 			pg, err := pgutil.Connect(ctx, pgutil.DefaultPG(), 8)
 			if err != nil {
@@ -62,6 +76,12 @@ func exp1Cmd() *cobra.Command {
 			schemaSQL, err := os.ReadFile("schema/postgres.sql")
 			if err != nil {
 				return err
+			}
+			if quiesce {
+				if err := quiesceSource(ctx, sp); err != nil {
+					return err
+				}
+				defer docker("unpause", "shadowcut-ingest-wiki-1")(context.Background())
 			}
 			// 1. predictions
 			rep := hazard.New(nil).Scan([]hazard.Input{{File: "schema/postgres.sql", SQL: string(schemaSQL)}},
@@ -139,6 +159,8 @@ func exp1Cmd() *cobra.Command {
 		},
 	}
 	c.Flags().IntVar(&runs, "runs", 3, "replay each statement this many times")
+	c.Flags().BoolVar(&rescore, "rescore", false, "only re-score an existing per_query.json in --out (no database access)")
+	c.Flags().BoolVar(&quiesce, "quiesce", true, "pause live ingestion and wait for CDC to drain (static snapshot) before replaying")
 	c.Flags().DurationVar(&gap, "gap", 10*time.Second, "pause between runs")
 	c.Flags().StringVar(&out, "out", "results/exp1", "output directory")
 	return c
@@ -162,8 +184,16 @@ func containsCat(xs []classify.Category, c classify.Category) bool {
 
 func score(q *exp1Query) {
 	q.TP, q.FP, q.FN = nil, nil, nil
+	// When Spanner rejects the statement, no other behaviour can be observed for it:
+	// predictions besides "unsupported" are unobservable, not false positives.
+	rejected := containsCat(q.Observed, classify.Unsupported)
+	q.Unobservable = nil
 	for _, p := range q.Predicted {
 		if environmental[p] {
+			continue
+		}
+		if rejected && p != classify.Unsupported {
+			q.Unobservable = append(q.Unobservable, p)
 			continue
 		}
 		if containsCat(q.Observed, p) {
@@ -305,6 +335,9 @@ func exp1Report(out string, qs []*exp1Query, runs int) error {
 		if len(q.FN) > 0 {
 			parts = append(parts, fmt.Sprintf("FN %v", q.FN))
 		}
+		if len(q.Unobservable) > 0 {
+			parts = append(parts, fmt.Sprintf("unobservable (rejected) %v", q.Unobservable))
+		}
 		if len(parts) > 0 {
 			res = strings.Join(parts, "; ")
 		}
@@ -340,4 +373,26 @@ func cats2s(cs []classify.Category) string {
 		s = append(s, string(c))
 	}
 	return strings.Join(s, ", ")
+}
+
+// quiesceSource pauses the live ingestor and waits until every CDC record has
+// been applied, so Postgres and Spanner hold the same static snapshot.
+func quiesceSource(ctx context.Context, sp *pgxpool.Pool) error {
+	if err := docker("pause", "shadowcut-ingest-wiki-1")(ctx); err != nil {
+		slog.Warn("could not pause the ingestor (already paused?)", "err", err)
+	}
+	brokers := strings.Split(pgutil.Env("KAFKA_BROKERS", "localhost:19094"), ",")
+	deadline := time.Now().Add(3 * time.Minute)
+	for {
+		b, err := cdc.MeasureBacklog(ctx, brokers, "sc.public.", sp)
+		if err == nil && b.Records == 0 {
+			time.Sleep(3 * time.Second) // let the last heartbeat-driven batches settle
+			slog.Info("source quiesced: CDC backlog empty")
+			return nil
+		}
+		if time.Now().After(deadline) {
+			return fmt.Errorf("CDC did not drain: %+v %v", b, err)
+		}
+		time.Sleep(time.Second)
+	}
 }

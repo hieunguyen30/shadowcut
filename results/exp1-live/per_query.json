@@ -1,0 +1,1022 @@
+[
+  {
+    "name": "coll_order_title",
+    "source": "curated",
+    "expect": "collation",
+    "predicted": [
+      "collation"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: text sort key \"2027 Goa Legislative Assembly election\" vs \"\\\"Dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-po..."
+    ]
+  },
+  {
+    "name": "coll_min_max",
+    "source": "curated",
+    "expect": "collation",
+    "predicted": [
+      "collation"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-COLLATION-COMPARE"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: last_title: max() over text returns \"Vikipediya:İstifadəçi hüquqları üçün müraciətlər\" vs \"İstifadəçi:ArxivBot/konfiqurasiya/doc\": the en..."
+    ]
+  },
+  {
+    "name": "coll_range_count",
+    "source": "curated",
+    "expect": "collation",
+    "predicted": [
+      "collation"
+    ],
+    "rules": [
+      "Q-COLLATION-COMPARE"
+    ],
+    "observed": [
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "other: 1/1 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "coll_lower_order",
+    "source": "curated",
+    "expect": "collation",
+    "predicted": [
+      "collation",
+      "function_semantics"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-FUNC-SEMANTICS"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: text sort key \"2026–27 australian region cyclone season\" vs \"\\\"dragons\\\" armchair\": PostgreSQL's linguistic collation and Spanner's code-..."
+    ]
+  },
+  {
+    "name": "coll_string_agg",
+    "source": "curated",
+    "expect": "collation",
+    "predicted": [
+      "collation"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: titles: string_agg() over text returns \"180° Berlin | 1. Badminton-Bundesliga | 1. FC Kaiserslaut...\" vs \"1. Badminton-Bundesliga | 1. FC..."
+    ]
+  },
+  {
+    "name": "coll_window_rank",
+    "source": "curated",
+    "expect": "collation",
+    "predicted": [
+      "collation",
+      "unsupported"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Statements with WINDOW clauses are not supported"
+    ],
+    "unobservable": [
+      "collation"
+    ]
+  },
+  {
+    "name": "coll_upper_unicode",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [
+      "function_semantics"
+    ],
+    "rules": [
+      "Q-FUNC-SEMANTICS"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "null_order_desc",
+    "source": "curated",
+    "expect": "null_ordering",
+    "predicted": [
+      "collation",
+      "null_ordering"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-NULL-ORDER"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: text sort key \"列维劳德\" vs \"대구버스매니아\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+    ]
+  },
+  {
+    "name": "null_order_asc_tail",
+    "source": "curated",
+    "expect": "null_ordering",
+    "predicted": [
+      "collation",
+      "null_ordering"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-NULL-ORDER"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 3
+  },
+  {
+    "name": "null_order_explicit_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [
+      "collation"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "concat_null",
+    "source": "curated",
+    "expect": "null_semantics",
+    "predicted": [
+      "null_semantics"
+    ],
+    "rules": [
+      "Q-CONCAT-NULL"
+    ],
+    "observed": [
+      "null_semantics"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "null_semantics: label: concat returns NULL on one engine ( / wikidatawiki vs NULL): NULL handling of concat() differs; label: concat returns NULL on one ..."
+    ]
+  },
+  {
+    "name": "concat_ws_null",
+    "source": "curated",
+    "expect": "null_semantics",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-FUNC"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Postgres function concat_ws(text, text, text) is not supported"
+    ]
+  },
+  {
+    "name": "concat_operator_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "coalesce_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "tz_date_trunc",
+    "source": "curated",
+    "expect": "timezone",
+    "predicted": [
+      "timezone"
+    ],
+    "rules": [
+      "Q-TZ-DEFAULT"
+    ],
+    "observed": [
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "other: 1/1 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "tz_text_cast",
+    "source": "curated",
+    "expect": "timezone",
+    "predicted": [
+      "timezone"
+    ],
+    "rules": [
+      "Q-TZ-DEFAULT"
+    ],
+    "observed": [
+      "timezone"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "timezone: ts: same instant rendered in different time zones (\"2026-11-16 08:32:53.238+00\" vs \"2026-11-16 00:32:53.238-08\"); ts: same instant render..."
+    ]
+  },
+  {
+    "name": "tz_extract_hour",
+    "source": "curated",
+    "expect": "timezone",
+    "predicted": [
+      "timezone"
+    ],
+    "rules": [
+      "Q-TZ-DEFAULT"
+    ],
+    "observed": [
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "other: 3/3 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "tz_date_cast",
+    "source": "curated",
+    "expect": "timezone",
+    "predicted": [
+      "timezone"
+    ],
+    "rules": [
+      "Q-TZ-DEFAULT"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 3
+  },
+  {
+    "name": "tz_utc_explicit_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 1
+  },
+  {
+    "name": "ts_precision_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "float_sum",
+    "source": "curated",
+    "expect": "precision",
+    "predicted": [
+      "precision"
+    ],
+    "rules": [
+      "Q-FLOAT-AGG"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 3
+  },
+  {
+    "name": "float_avg_by_wiki",
+    "source": "curated",
+    "expect": "precision",
+    "predicted": [
+      "collation",
+      "precision"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-FLOAT-AGG"
+    ],
+    "observed": [
+      "precision"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "precision: g: 1.0264053944948766 vs 1.0264053944948763 (relative difference 2.2e-16); g: 1.0133474969158267 vs 1.0133474969158265 (relative differen..."
+    ]
+  },
+  {
+    "name": "numeric_avg",
+    "source": "curated",
+    "expect": "precision",
+    "predicted": [],
+    "rules": [],
+    "observed": [
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "other: 1/1 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "numeric_division",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [
+      "collation"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "int_avg_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 1
+  },
+  {
+    "name": "limit_without_order",
+    "source": "curated",
+    "expect": "nondeterministic_order",
+    "predicted": [
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-LIMIT-NO-ORDER"
+    ],
+    "observed": [
+      "nondeterministic_order"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "nondeterministic_order: LIMIT without ORDER BY: each engine may return any qualifying rows"
+    ]
+  },
+  {
+    "name": "order_ties_limit",
+    "source": "curated",
+    "expect": "nondeterministic_order",
+    "predicted": [
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-ORDER-TIES"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "unordered_group_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 2
+  },
+  {
+    "name": "gh_repo_ties",
+    "source": "curated",
+    "expect": "nondeterministic_order",
+    "predicted": [
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-ORDER-TIES"
+    ],
+    "observed": [
+      "nondeterministic_order"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "nondeterministic_order: rows tie on every ORDER BY key; each engine broke the tie differently (order)"
+    ]
+  },
+  {
+    "name": "unsup_round_numeric",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "collation",
+      "function_semantics",
+      "unsupported"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-FUNC-SEMANTICS",
+      "Q-UNSUP-FUNC"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: function round(numeric, bigint) does not exist\nHint: No function matches the given name and argument types. Y..."
+    ],
+    "unobservable": [
+      "collation",
+      "function_semantics"
+    ]
+  },
+  {
+    "name": "unsup_distinct_on",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "collation",
+      "nondeterministic_order",
+      "unsupported"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-ORDER-TIES",
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Statements with DISTINCT ON clauses are not supported"
+    ],
+    "unobservable": [
+      "collation",
+      "nondeterministic_order"
+    ]
+  },
+  {
+    "name": "unsup_row_compare",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Unsupported PostgreSQL expression type: RowCompareExpr"
+    ]
+  },
+  {
+    "name": "unsup_any_array_literal",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: ANY, SOME, and IN expressions with array literal arguments are not supported. Try using an array constructor ..."
+    ]
+  },
+  {
+    "name": "unsup_collate",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "collation",
+      "nondeterministic_order",
+      "unsupported"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-ORDER-TIES",
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Unsupported PostgreSQL expression type: CollateExpr"
+    ],
+    "unobservable": [
+      "collation",
+      "nondeterministic_order"
+    ]
+  },
+  {
+    "name": "unsup_recursive_cte",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Recursive WITH expressions are not supported"
+    ]
+  },
+  {
+    "name": "unsup_json_build_object",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-FUNC"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Unable to resolve argument type. Please consider adding an explicit cast"
+    ]
+  },
+  {
+    "name": "unsup_generate_series_select",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-FUNC",
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Postgres function generate_series(bigint, bigint) is not supported"
+    ]
+  },
+  {
+    "name": "unsup_for_update_autocommit",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: FOR UPDATE is not supported in this transaction type."
+    ]
+  },
+  {
+    "name": "any_array_constructor_control",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 3
+  },
+  {
+    "name": "ilike_operator",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [
+      "Q-ILIKE"
+    ],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "regex_operator",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 3
+  },
+  {
+    "name": "similar_to",
+    "source": "curated",
+    "expect": "unsupported",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Postgres function similar_to_escape(text) is not supported"
+    ]
+  },
+  {
+    "name": "jsonb_field",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "jsonb_whole",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "length_unicode",
+    "source": "curated",
+    "expect": "none",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-FUNC"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Postgres function octet_length(text) is not supported"
+    ]
+  },
+  {
+    "name": "top_pages",
+    "source": "app",
+    "predicted": [
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-ORDER-TIES"
+    ],
+    "observed": [
+      "nondeterministic_order"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "nondeterministic_order: rows tie on every ORDER BY key; each engine broke the tie differently (order)"
+    ]
+  },
+  {
+    "name": "recent_edits_by_user",
+    "source": "app",
+    "predicted": [
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-ORDER-TIES"
+    ],
+    "observed": [
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "other: 1/1 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "edits_in_range",
+    "source": "app",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "search_titles",
+    "source": "app",
+    "predicted": [
+      "collation",
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-ORDER-TIES",
+      "Q-ILIKE"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: text sort key \"w\" vs \"W. Cleon Skousen\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+    ]
+  },
+  {
+    "name": "feed_page",
+    "source": "app",
+    "predicted": [
+      "unsupported"
+    ],
+    "rules": [
+      "Q-UNSUP-SYNTAX"
+    ],
+    "observed": [
+      "unsupported"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "unsupported: Spanner rejected the query: Unsupported PostgreSQL expression type: RowCompareExpr"
+    ]
+  },
+  {
+    "name": "feed_first_page",
+    "source": "app",
+    "predicted": [],
+    "rules": [],
+    "observed": [
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 2,
+    "reasons": [
+      "other: 15/15 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "feed_offset",
+    "source": "app",
+    "predicted": [
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-ORDER-TIES"
+    ],
+    "observed": [
+      "other",
+      "precision"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "other: 12/12 rows differ persistently (still different after recheck) and could not be attributed",
+      "precision: id: 97495 vs 97469; page_title: File:Fir Tree Farm - geograph.org.uk - 204355.jpg vs File:MAYERS, Hugh Gordon - Born- (BLANK), Naturalize..."
+    ]
+  },
+  {
+    "name": "pages_alpha",
+    "source": "app",
+    "predicted": [
+      "collation"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-COLLATION-COMPARE"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: text sort key \"Mandubii\" vs \"M Countdown\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+    ]
+  },
+  {
+    "name": "wiki_stats",
+    "source": "app",
+    "predicted": [
+      "collation",
+      "precision"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-FLOAT-AGG"
+    ],
+    "observed": [
+      "precision"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "precision: avg_growth: 1.1809437660415283 vs 1.1809437660415198 (relative difference 7.1e-15); sum_growth: 35404.69410592502 vs 35404.69410592476 (r..."
+    ]
+  },
+  {
+    "name": "daily_counts",
+    "source": "app",
+    "predicted": [
+      "timezone"
+    ],
+    "rules": [
+      "Q-TZ-DEFAULT"
+    ],
+    "observed": [
+      "timezone",
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "timezone: day: timestamps differ by 8h0m0s (a whole time-zone offset)",
+      "other: 1/1 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "editor_labels",
+    "source": "app",
+    "predicted": [
+      "null_semantics"
+    ],
+    "rules": [
+      "Q-CONCAT-NULL"
+    ],
+    "observed": [
+      "null_semantics",
+      "other"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "null_semantics: id: 94234 vs 94206; id: 94231 vs 94199; id: 94227 vs 94203",
+      "other: 11/11 rows differ persistently (still different after recheck) and could not be attributed"
+    ]
+  },
+  {
+    "name": "top_editors",
+    "source": "app",
+    "predicted": [
+      "collation",
+      "null_ordering"
+    ],
+    "rules": [
+      "Q-COLLATION-ORDER",
+      "Q-NULL-ORDER"
+    ],
+    "observed": [
+      "collation"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "collation: text sort key \"레스터기타\" vs \"Avionneur-daher\": PostgreSQL's linguistic collation and Spanner's code-point order disagree (limit)"
+    ]
+  },
+  {
+    "name": "page_detail",
+    "source": "app",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "gh_top_repos",
+    "source": "app",
+    "predicted": [
+      "nondeterministic_order"
+    ],
+    "rules": [
+      "Q-ORDER-TIES"
+    ],
+    "observed": [
+      "nondeterministic_order"
+    ],
+    "runs": 3,
+    "mismatched_runs": 3,
+    "reasons": [
+      "nondeterministic_order: rows tie on every ORDER BY key; each engine broke the tie differently (order)"
+    ]
+  },
+  {
+    "name": "gh_repo_events",
+    "source": "app",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 0
+  },
+  {
+    "name": "touch_page_read",
+    "source": "app",
+    "predicted": [],
+    "rules": [],
+    "observed": null,
+    "runs": 3,
+    "mismatched_runs": 1
+  }
+]
